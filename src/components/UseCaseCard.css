@@ -1,0 +1,29 @@
+.usecase-card {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--blue);
+  border-radius: 14px;
+  padding: 14px;
+  text-align: left;
+  background: linear-gradient(180deg, #fff 0%, #fbfcff 100%);
+  display: flex;
+  gap: 10px;
+  cursor: pointer;
+  transition: all var(--t) var(--ease);
+}
+.usecase-card:hover {
+  transform: translateX(4px);
+  box-shadow: var(--shadow);
+  border-color: var(--blue-mid);
+}
+.blue-dot {
+  width: 9px;
+  height: 9px;
+  margin-top: 6px;
+  border-radius: 99px;
+  background: var(--blue);
+}
+.usecase-card p {
+  color: var(--text-2);
+  margin-top: 4px;
+}

@@ -1,0 +1,28 @@
+.score-table {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: linear-gradient(180deg, #fff 0%, #fcfdff 100%);
+}
+.score-table summary {
+  cursor: pointer;
+  font-weight: 650;
+  color: var(--text-1);
+}
+.score-table table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+.score-table th,
+.score-table td {
+  text-align: left;
+  padding: 9px 4px;
+  border-bottom: 1px solid var(--border);
+}
+.score-table th {
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.72rem;
+}

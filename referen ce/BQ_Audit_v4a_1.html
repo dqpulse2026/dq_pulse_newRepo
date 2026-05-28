@@ -1,0 +1,1511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BQ Ready Audit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* ─── DESIGN TOKENS ─── */
+:root {
+  --bg:         #f7f8fc;
+  --panel:      #ffffff;
+  --border:     #e8eaf2;
+  --border-mid: #d0d4e8;
+
+  --blue:       #3b5bdb;
+  --blue-2:     #4c6ef5;
+  --blue-pale:  #eef2ff;
+  --blue-mid:   #c5d1f9;
+
+  --indigo:     #5c7cfa;
+  --green:      #2f9e44;
+  --green-pale: #ebfbee;
+  --green-mid:  #b2f2bb;
+  --amber:      #e67700;
+  --amber-pale: #fff9db;
+  --amber-mid:  #ffec99;
+  --red:        #c92a2a;
+  --red-pale:   #fff5f5;
+  --red-mid:    #ffc9c9;
+
+  --text-1:     #111827;
+  --text-2:     #4b5563;
+  --text-3:     #9ca3af;
+
+  --radius-sm:  8px;
+  --radius:     14px;
+  --radius-lg:  20px;
+  --radius-xl:  28px;
+
+  --font-head:  'Bricolage Grotesque', sans-serif;
+  --font-body:  'Instrument Sans', sans-serif;
+
+  --ease:       cubic-bezier(0.4, 0, 0.2, 1);
+  --spring:     cubic-bezier(0.16, 1, 0.3, 1);
+  --t:          0.25s;
+
+  --shadow-sm: 0 1px 3px rgba(17,24,39,0.06), 0 1px 2px rgba(17,24,39,0.04);
+  --shadow:    0 4px 16px rgba(17,24,39,0.08), 0 1px 4px rgba(17,24,39,0.04);
+  --shadow-md: 0 10px 32px rgba(17,24,39,0.10), 0 2px 8px rgba(17,24,39,0.05);
+  --shadow-lg: 0 20px 60px rgba(17,24,39,0.12), 0 4px 16px rgba(17,24,39,0.06);
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  min-height: 100vh;
+  overflow-x: hidden;
+  color: var(--text-1);
+  position: relative;
+}
+
+/* soft background texture */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse 70% 50% at 10% 0%, rgba(59,91,219,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 90% 100%, rgba(92,124,250,0.05) 0%, transparent 60%);
+  pointer-events: none; z-index: 0;
+}
+
+/* ─── SCREENS ─── */
+.screen {
+  display: none;
+  min-height: 100vh;
+  padding: 32px 20px 60px;
+  align-items: flex-start;
+  justify-content: center;
+  position: relative; z-index: 1;
+}
+
+.screen.active {
+  display: flex;
+  animation: screenIn 0.5s var(--spring) both;
+}
+
+@keyframes screenIn {
+  from { opacity: 0; transform: translateY(22px) scale(0.98); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ─── PANEL ─── */
+.panel {
+  width: 100%;
+  max-width: 980px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 52px;
+  box-shadow: var(--shadow-md);
+  position: relative;
+  overflow: hidden;
+}
+
+.panel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--blue), var(--indigo), #74c0fc);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+}
+
+/* ─── STEP BAR ─── */
+.stepbar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 44px;
+}
+
+.step-item {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 6px;
+  flex: 1;
+}
+
+.step-dot {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  border: 2px solid var(--border-mid);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700;
+  color: var(--text-3);
+  background: white;
+  font-family: var(--font-body);
+  transition: all var(--t) var(--ease);
+  position: relative; z-index: 1;
+}
+
+.step-dot.done   { background: var(--green); border-color: var(--green); color: white; }
+.step-dot.active { background: var(--blue); border-color: var(--blue); color: white; box-shadow: 0 0 0 4px rgba(59,91,219,0.15); }
+.step-dot.done::after { content: '✓'; }
+.step-dot.done span { display: none; }
+
+.step-line {
+  height: 2px; flex: 1;
+  background: var(--border);
+  margin-top: -19px;
+  transition: background var(--t) var(--ease);
+}
+.step-line.done   { background: var(--green); }
+.step-line.active { background: linear-gradient(90deg, var(--green), var(--blue)); }
+
+.step-label {
+  font-size: 10px; font-weight: 600;
+  color: var(--text-3); letter-spacing: 0.04em;
+  text-transform: uppercase; text-align: center;
+  white-space: nowrap; transition: color var(--t) var(--ease);
+}
+.step-item.active .step-label { color: var(--blue); }
+.step-item.done   .step-label { color: var(--green); }
+
+/* ─── TYPOGRAPHY ─── */
+h1 {
+  font-family: var(--font-head);
+  font-size: clamp(28px, 4vw, 46px);
+  font-weight: 800;
+  color: var(--text-1);
+  line-height: 1.1;
+  margin-bottom: 14px;
+  letter-spacing: -0.03em;
+}
+
+h1 em {
+  font-style: normal;
+  color: var(--blue);
+}
+
+.subtitle {
+  font-size: 16px;
+  color: var(--text-2);
+  line-height: 1.7;
+  margin-bottom: 36px;
+  max-width: 640px;
+  font-weight: 400;
+}
+
+/* ─── BADGE CHIPS ─── */
+.chip-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 28px; }
+
+.chip {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 7px 14px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 50px;
+  font-size: 13px; font-weight: 500;
+  color: var(--text-2);
+  box-shadow: var(--shadow-sm);
+}
+
+.chip-icon {
+  width: 22px; height: 22px;
+  background: var(--blue-pale);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px;
+}
+
+/* ─── WELCOME BOX ─── */
+.welcome-box {
+  display: flex; align-items: center; gap: 20px;
+  padding: 24px 28px;
+  background: linear-gradient(135deg, #f8f9ff, var(--blue-pale));
+  border: 1px solid var(--blue-mid);
+  border-radius: var(--radius-lg);
+  margin-bottom: 28px;
+}
+
+.welcome-emoji { font-size: 52px; flex-shrink: 0; }
+
+.welcome-text h3 {
+  font-family: var(--font-head);
+  font-size: 20px; font-weight: 700;
+  color: var(--text-1); margin-bottom: 6px;
+}
+
+.welcome-text p { font-size: 14px; color: var(--text-2); line-height: 1.7; }
+
+/* ─── TRUST ROW ─── */
+.trust-row {
+  display: flex; gap: 20px; flex-wrap: wrap;
+  margin-bottom: 32px;
+}
+
+.trust-item {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 13px; font-weight: 500; color: var(--text-2);
+}
+
+.trust-item::before {
+  content: '';
+  width: 18px; height: 18px;
+  background: var(--green-pale);
+  border: 1px solid var(--green-mid);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 6l3 3 5-5' stroke='%232f9e44' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  flex-shrink: 0;
+}
+
+/* ─── GOOGLE BUTTON ─── */
+.btn-google {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  width: 100%; max-width: 360px;
+  padding: 14px 24px;
+  background: white;
+  border: 1.5px solid var(--border-mid);
+  border-radius: var(--radius);
+  font-size: 15px; font-weight: 600;
+  font-family: var(--font-body);
+  color: var(--text-1);
+  cursor: pointer;
+  transition: all var(--t) var(--ease);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-google:hover {
+  border-color: #aab3cc;
+  box-shadow: var(--shadow);
+  transform: translateY(-2px);
+}
+
+.g-logo { width: 20px; height: 20px; flex-shrink: 0; }
+
+/* ─── PRIMARY BUTTON ─── */
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 15px 32px;
+  background: var(--blue);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 15px; font-weight: 700;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: all var(--t) var(--ease);
+  box-shadow: 0 4px 20px rgba(59,91,219,0.28);
+  position: relative; overflow: hidden;
+}
+
+.btn::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+  left: -100%; transition: left 0.5s ease;
+}
+
+.btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(59,91,219,0.36); }
+.btn:hover::after { left: 100%; }
+.btn:active { transform: translateY(0); }
+.btn:disabled { background: var(--border-mid); color: var(--text-3); cursor: not-allowed; box-shadow: none; transform: none; }
+
+/* ─── GOAL CARDS ─── */
+.goal-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 36px;
+}
+
+.goal-card {
+  padding: 28px 20px;
+  background: white;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.3s var(--spring);
+  position: relative;
+  text-align: center;
+  user-select: none;
+}
+
+.goal-card:hover {
+  border-color: var(--blue-mid);
+  background: var(--blue-pale);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow);
+}
+
+.goal-card.selected {
+  border-color: var(--blue);
+  background: var(--blue-pale);
+  transform: translateY(-4px);
+  box-shadow: 0 6px 24px rgba(59,91,219,0.15);
+}
+
+.selected-badge {
+  position: absolute; top: 12px; right: 12px;
+  width: 20px; height: 20px;
+  background: white;
+  border: 2px solid var(--border-mid);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; color: transparent;
+  transition: all var(--t) var(--ease);
+}
+
+.goal-card.selected .selected-badge {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: white;
+}
+
+.goal-icon { font-size: 36px; display: block; margin-bottom: 12px; }
+
+.goal-label {
+  font-family: var(--font-head);
+  font-weight: 700; font-size: 16px;
+  color: var(--text-1); margin-bottom: 8px;
+}
+
+.goal-desc {
+  font-size: 12px; color: var(--text-3);
+  line-height: 1.65;
+}
+
+.goal-card.selected .goal-label { color: var(--blue); }
+
+/* ─── SELECT ─── */
+.field { margin-bottom: 20px; }
+
+.field-label {
+  display: block;
+  font-size: 12px; font-weight: 600;
+  color: var(--text-2); text-transform: uppercase;
+  letter-spacing: 0.08em; margin-bottom: 8px;
+}
+
+select {
+  width: 100%;
+  padding: 14px 18px;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 15px;
+  font-family: var(--font-body);
+  color: var(--text-1);
+  -webkit-appearance: none; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239ca3af' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  padding-right: 44px;
+  cursor: pointer;
+  transition: all var(--t) var(--ease);
+  outline: none;
+}
+
+select:focus {
+  border-color: var(--blue);
+  background-color: white;
+  box-shadow: 0 0 0 3px rgba(59,91,219,0.12);
+}
+
+/* ─── PILLAR / RUN CARDS ─── */
+.pillar-list { display: grid; gap: 10px; margin-bottom: 28px; }
+
+.pillar-card {
+  display: flex; align-items: center; gap: 14px;
+  padding: 15px 18px;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  transition: all var(--t) var(--ease);
+}
+
+.pillar-icon {
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  background: white;
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px; flex-shrink: 0;
+  transition: all var(--t) var(--ease);
+}
+
+.pillar-body { flex: 1; }
+.pillar-name { font-size: 14px; font-weight: 600; color: var(--text-1); }
+.pillar-sub  { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+
+.pillar-status {
+  font-size: 12px; font-weight: 600;
+  color: var(--text-3); white-space: nowrap;
+  font-family: var(--font-body);
+}
+
+.pillar-card.running {
+  border-color: var(--blue-2);
+  background: var(--blue-pale);
+}
+.pillar-card.running .pillar-icon { background: var(--blue-mid); border-color: var(--blue-2); }
+.pillar-card.running .pillar-status { color: var(--blue); }
+
+.pillar-card.done {
+  border-color: #a9e5b4;
+  background: var(--green-pale);
+}
+.pillar-card.done .pillar-icon { background: var(--green-mid); border-color: #a9e5b4; }
+.pillar-card.done .pillar-status { color: var(--green); }
+
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+.blink { animation: blink 0.9s step-start infinite; }
+
+@keyframes pulseRing {
+  0%,100% { box-shadow: 0 0 0 0 rgba(59,91,219,0.3); }
+  50%      { box-shadow: 0 0 0 6px rgba(59,91,219,0); }
+}
+.pillar-card.running .pillar-icon { animation: pulseRing 1.3s ease-in-out infinite; }
+
+/* ─── PROGRESS BAR ─── */
+.prog-track {
+  height: 8px;
+  background: var(--border);
+  border-radius: 50px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.prog-fill {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, var(--blue), var(--indigo));
+  border-radius: 50px;
+  transition: width 0.6s var(--ease);
+  position: relative; overflow: hidden;
+}
+
+.prog-fill::after {
+  content: '';
+  position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+  animation: shimmer 1.8s infinite;
+}
+
+@keyframes shimmer { to { left: 200%; } }
+
+.prog-meta {
+  display: flex; justify-content: space-between;
+  margin-top: 10px;
+}
+.prog-meta span { font-size: 12px; color: var(--text-3); }
+#progPct { color: var(--blue); font-weight: 700; }
+
+/* ─── RESULTS ─── */
+.results-header {
+  display: flex; align-items: flex-start; gap: 28px;
+  margin-bottom: 32px; flex-wrap: wrap;
+}
+
+.gauge-wrap {
+  position: relative;
+  width: 130px; height: 130px; flex-shrink: 0;
+}
+
+.gauge-wrap svg { width: 130px; height: 130px; transform: rotate(-90deg); }
+.gauge-bg   { fill: none; stroke: var(--border); stroke-width: 9; }
+.gauge-fill {
+  fill: none; stroke-width: 9; stroke-linecap: round;
+  stroke-dasharray: 339.3;
+  stroke-dashoffset: 339.3;
+  transition: stroke-dashoffset 1.3s var(--ease);
+}
+.gauge-fill.red    { stroke: var(--red); }
+.gauge-fill.amber  { stroke: var(--amber); }
+.gauge-fill.green  { stroke: var(--green); }
+
+.gauge-center {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+
+.gauge-val {
+  font-family: var(--font-head);
+  font-size: 28px; font-weight: 800;
+  color: var(--text-1); line-height: 1;
+}
+
+.gauge-lbl { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+
+.results-meta { flex: 1; min-width: 220px; }
+
+.verdict-title {
+  font-family: var(--font-head);
+  font-size: 22px; font-weight: 800;
+  color: var(--text-1); margin-bottom: 8px; line-height: 1.2;
+}
+
+.verdict-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 14px; border-radius: 50px;
+  font-size: 12px; font-weight: 700;
+  margin-bottom: 12px;
+}
+.verdict-tag.red   { background: var(--red-pale);   border:1px solid var(--red-mid);   color:var(--red); }
+.verdict-tag.amber { background: var(--amber-pale); border:1px solid var(--amber-mid); color:var(--amber); }
+.verdict-tag.green { background: var(--green-pale); border:1px solid var(--green-mid); color:var(--green); }
+
+.verdict-blurb { font-size: 14px; color: var(--text-2); line-height: 1.7; }
+
+/* ─── FINDING CARDS ─── */
+.section-title {
+  font-family: var(--font-head);
+  font-size: 17px; font-weight: 700;
+  color: var(--text-1); margin-bottom: 14px;
+  display: flex; align-items: center; gap: 8px;
+}
+
+.finding-card {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 16px 18px;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 10px;
+}
+
+.f-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0; margin-top: 5px;
+}
+.f-dot.red   { background: var(--red);   }
+.f-dot.amber { background: var(--amber); }
+.f-dot.green { background: var(--green); }
+.f-dot.blue  { background: var(--blue);  }
+
+.f-body {}
+.f-title { font-size: 14px; font-weight: 700; color: var(--text-1); margin-bottom: 4px; }
+.f-desc  { font-size: 13px; color: var(--text-2); line-height: 1.65; }
+
+/* ─── SCORE TABLE ─── */
+.score-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 5px;
+  margin-bottom: 8px;
+}
+
+.score-table th {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--text-3);
+  padding: 0 14px 8px; text-align: left;
+}
+
+.score-table td {
+  padding: 12px 14px;
+  background: var(--bg);
+  font-size: 13px; color: var(--text-2);
+}
+
+.score-table td:first-child {
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+  font-weight: 600; color: var(--text-1);
+}
+
+.score-table td:last-child {
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  text-align: right; font-weight: 700; font-size: 14px;
+}
+
+.s-red   { color: var(--red)   !important; }
+.s-amber { color: var(--amber) !important; }
+.s-green { color: var(--green) !important; }
+
+/* ─── USE CASE CARDS ─── */
+.uc-section {
+  background: linear-gradient(135deg, #f8f9ff, var(--blue-pale));
+  border: 1px solid var(--blue-mid);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  margin-bottom: 28px;
+}
+
+.uc-group { margin-bottom: 20px; }
+.uc-group:last-child { margin-bottom: 0; }
+
+.uc-group-label {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--text-3);
+  margin-bottom: 10px; padding-left: 2px;
+}
+
+.uc-card {
+  width: 100%;
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 14px 16px;
+  background: white;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.25s var(--spring);
+  text-align: left;
+  font-family: var(--font-body);
+  position: relative; overflow: hidden;
+}
+
+.uc-card::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0;
+  width: 3px; background: var(--blue);
+  transform: scaleY(0); transform-origin: center;
+  transition: transform 0.25s ease;
+  border-radius: 3px 0 0 3px;
+}
+
+.uc-card:hover { border-color: var(--blue-mid); background: var(--blue-pale); transform: translateX(4px); }
+.uc-card:hover::before { transform: scaleY(1); }
+
+.uc-icon {
+  width: 32px; height: 32px;
+  background: var(--blue-pale);
+  border: 1px solid var(--blue-mid);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; flex-shrink: 0;
+}
+
+.uc-body { flex: 1; }
+.uc-goal { font-size: 11px; color: var(--blue); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px; }
+.uc-name { font-size: 13px; font-weight: 700; color: var(--text-1); margin-bottom: 3px; }
+.uc-benefit { font-size: 12px; color: var(--text-2); line-height: 1.55; }
+.uc-arrow { color: var(--text-3); font-size: 18px; flex-shrink: 0; margin-top: 4px; transition: all var(--t) var(--ease); }
+.uc-card:hover .uc-arrow { color: var(--blue); transform: translateX(3px); }
+
+/* ─── TOAST ─── */
+.toast-overlay {
+  position: fixed; inset: 0;
+  background: rgba(17,24,39,0.4);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999; opacity: 0; pointer-events: none;
+  transition: opacity 0.25s var(--ease);
+  padding: 20px;
+}
+.toast-overlay.show { opacity: 1; pointer-events: all; }
+
+.toast-box {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 40px;
+  max-width: 440px; width: 100%;
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+  transform: scale(0.93) translateY(16px);
+  transition: transform 0.4s var(--spring);
+}
+.toast-overlay.show .toast-box { transform: none; }
+
+.toast-icon {
+  width: 56px; height: 56px;
+  background: var(--blue-pale);
+  border: 1.5px solid var(--blue-mid);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; margin: 0 auto 18px;
+}
+
+.toast-box h3 {
+  font-family: var(--font-head);
+  font-size: 20px; font-weight: 800;
+  color: var(--text-1); margin-bottom: 10px;
+}
+
+.toast-box p { font-size: 14px; color: var(--text-2); line-height: 1.7; margin-bottom: 10px; }
+
+.toast-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--blue-pale); border: 1px solid var(--blue-mid);
+  border-radius: 50px; padding: 6px 16px;
+  font-size: 13px; font-weight: 700; color: var(--blue);
+  margin: 6px 0 20px;
+}
+
+.toast-close {
+  padding: 12px 28px;
+  background: var(--text-1); color: white;
+  border: none; border-radius: var(--radius);
+  font-size: 14px; font-weight: 700;
+  font-family: var(--font-body);
+  cursor: pointer; transition: background var(--t) var(--ease);
+}
+.toast-close:hover { background: #374151; }
+
+/* ─── DIVIDER ─── */
+.divider { height: 1px; background: var(--border); margin: 28px 0; }
+
+/* ─── DETAILS ─── */
+details summary {
+  font-size: 14px; font-weight: 600; color: var(--text-2);
+  cursor: pointer; padding: 4px 0; user-select: none;
+  display: flex; align-items: center; gap: 8px;
+}
+
+details summary::marker { display: none; }
+details summary::-webkit-details-marker { display: none; }
+
+details[open] summary { color: var(--blue); }
+
+/* ─── HELPERS ─── */
+.mt-20 { margin-top: 20px; }
+.mb-20 { margin-bottom: 20px; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+.fade-in {
+  opacity: 0; transform: translateY(10px);
+  animation: fadeIn 0.4s var(--spring) forwards;
+}
+@keyframes fadeIn { to { opacity:1; transform:none; } }
+.fade-in:nth-child(1) { animation-delay: 0.05s; }
+.fade-in:nth-child(2) { animation-delay: 0.1s; }
+.fade-in:nth-child(3) { animation-delay: 0.15s; }
+.fade-in:nth-child(4) { animation-delay: 0.2s; }
+.fade-in:nth-child(5) { animation-delay: 0.25s; }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 640px) {
+  .panel { padding: 28px 20px; }
+  .goal-grid { grid-template-columns: 1fr; gap: 10px; }
+  .goal-card { padding: 16px; display: flex; text-align: left; align-items: center; gap: 14px; }
+  .goal-icon { font-size: 28px; margin-bottom: 0; }
+  .grid-2 { grid-template-columns: 1fr; }
+  .results-header { flex-direction: column; align-items: center; text-align: center; }
+  .step-label { display: none; }
+  .score-table th:nth-child(2), .score-table td:nth-child(2) { display: none; }
+}
+
+@media (max-width: 400px) {
+  h1 { font-size: 24px; }
+  .panel { padding: 20px 14px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════
+     S1 — SIGN IN
+════════════════════════════ -->
+<div id="s1" class="screen active">
+<div class="panel">
+
+  <div class="chip-row">
+    <div class="chip"><div class="chip-icon">☁️</div>BigQuery</div>
+    <div class="chip"><div class="chip-icon">📊</div>GA4</div>
+    <div class="chip"><div class="chip-icon">🤖</div>AI Ready</div>
+    <div class="chip"><div class="chip-icon">✨</div>Audit Engine</div>
+  </div>
+
+  <h1>Welcome to<br><em>BQ Ready Audit</em></h1>
+  <p class="subtitle">Find out in 60 seconds whether your business data is ready to power smarter marketing, personalisation, and AI-driven growth — no technical background needed.</p>
+
+  <div class="welcome-box">
+    <div class="welcome-emoji">👋</div>
+    <div class="welcome-text">
+      <h3>Quick &amp; secure sign-in</h3>
+      <p>Sign in with your Google account to get started. We only read your data — nothing is changed or stored without your permission.</p>
+    </div>
+  </div>
+
+  <div class="trust-row">
+    <div class="trust-item">Secure Google sign-in</div>
+    <div class="trust-item">Read-only access</div>
+    <div class="trust-item">No passwords needed</div>
+  </div>
+
+<button class="btn-google" onclick="googleSignIn()">
+    <svg class="g-logo" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+    </svg>
+    Continue with Google
+  </button>
+
+</div>
+</div>
+
+
+<!-- ════════════════════════════
+     S2 — BUSINESS TYPE
+════════════════════════════ -->
+<div id="s2" class="screen">
+<div class="panel">
+
+  <div class="stepbar" id="sb2"></div>
+
+  <h1>What type of<br><em>business</em> are you?</h1>
+  <p class="subtitle">Pick all that apply — your selection shapes which audit checks we run and which tools we recommend at the end.</p>
+
+  <p style="font-size:12px;color:var(--text-3);margin-bottom:16px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;">✓ Select one or more</p>
+
+  <div class="goal-grid">
+
+    <div class="goal-card" onclick="toggleBiz(this,'ecommerce')">
+      <div class="selected-badge">✓</div>
+      <span class="goal-icon">🛒</span>
+      <div class="goal-label">Online Store</div>
+      <div class="goal-desc">You sell products or services online — customers browse, add to cart, and check out.</div>
+    </div>
+
+    <div class="goal-card" onclick="toggleBiz(this,'leadgen')">
+      <div class="selected-badge">✓</div>
+      <span class="goal-icon">📈</span>
+      <div class="goal-label">Service &amp; Leads</div>
+      <div class="goal-desc">You generate enquiries, form submissions, or sign-ups — sales happen offline or after a call.</div>
+    </div>
+
+    <div class="goal-card" onclick="toggleBiz(this,'publisher')">
+      <div class="selected-badge">✓</div>
+      <span class="goal-icon">📱</span>
+      <div class="goal-label">Content &amp; Apps</div>
+      <div class="goal-desc">You publish articles, videos, or run an app — engagement and subscriptions are your goals.</div>
+    </div>
+
+  </div>
+
+  <button id="btnS2" class="btn" onclick="go('s2','s3')">Continue →</button>
+
+</div>
+</div>
+
+
+<!-- ════════════════════════════
+     S3 — AUDIT TYPE
+════════════════════════════ -->
+<div id="s3" class="screen">
+<div class="panel">
+
+  <div class="stepbar" id="sb3"></div>
+
+  <h1>What would you<br>like to <em>check?</em></h1>
+  <p class="subtitle">Choose the type of health check to run. Not sure? Start with the Full Check — it covers everything and gives you the clearest picture.</p>
+
+  <div class="goal-grid">
+
+    <div class="goal-card" onclick="pickAudit(this,'complete')">
+      <div class="selected-badge">✓</div>
+      <span class="goal-icon">🧠</span>
+      <div class="goal-label">Full Health Check</div>
+      <div class="goal-desc">A complete overview — covers who your users are, what actions they take, and how much history you have.</div>
+    </div>
+
+    <div class="goal-card" onclick="pickAudit(this,'ml')">
+      <div class="selected-badge">✓</div>
+      <span class="goal-icon">📊</span>
+      <div class="goal-label">AI &amp; Predictions</div>
+      <div class="goal-desc">Are you ready to use AI to predict customer behaviour, churn, or lifetime value?</div>
+    </div>
+
+    <div class="goal-card" onclick="pickAudit(this,'event')">
+      <div class="selected-badge">✓</div>
+      <span class="goal-icon">🔍</span>
+      <div class="goal-label">Tracking Quality</div>
+      <div class="goal-desc">Is your website correctly recording every important action a visitor takes?</div>
+    </div>
+
+  </div>
+
+  <button id="btnS3" class="btn" onclick="auditNext()">Continue →</button>
+
+</div>
+</div>
+
+
+<!-- ════════════════════════════
+     S3A — USER IDENTITY QUESTION
+════════════════════════════ -->
+<div id="s3a" class="screen">
+<div class="panel">
+
+  <div class="stepbar" id="sb3a"></div>
+
+  <h1>Do your users<br><em>log in</em> to your site?</h1>
+  <p class="subtitle">This helps us understand how well we can recognise the same person across multiple visits — which is key for personalisation and AI recommendations.</p>
+
+  <div class="goal-grid">
+
+    <div class="goal-card" onclick="pickIdentity(this,'yes')">
+      <div class="selected-badge">✓</div>
+      <span class="goal-icon">✅</span>
+      <div class="goal-label">Yes</div>
+      <div class="goal-desc">We have a login, accounts, or user IDs set up.</div>
+    </div>
+
+    <div class="goal-card" onclick="pickIdentity(this,'no')">
+      <div class="selected-badge">✓</div>
+      <span class="goal-icon">❌</span>
+      <div class="goal-label">No</div>
+      <div class="goal-desc">Most visitors browse without logging in.</div>
+    </div>
+
+    <div class="goal-card" onclick="pickIdentity(this,'unknown')">
+      <div class="selected-badge">✓</div>
+      <span class="goal-icon">🤔</span>
+      <div class="goal-label">Not Sure</div>
+      <div class="goal-desc">I'm not sure how this is set up on our site.</div>
+    </div>
+
+  </div>
+
+  <button id="btnS3a" class="btn" onclick="go('s3a','s4')">Continue →</button>
+
+</div>
+</div>
+
+
+<!-- ════════════════════════════
+     S4 — CONNECT DATA
+════════════════════════════ -->
+<div id="s4" class="screen">
+<div class="panel">
+
+  <div class="stepbar" id="sb4"></div>
+
+  <h1>Connect your<br><em>data source</em></h1>
+  <p class="subtitle">Select which data store to audit. These are pulled from your connected Google account — we only read the data, never write or modify anything.</p>
+
+  <div class="grid-2 mt-20">
+    <div class="field">
+      <label class="field-label">Google Cloud Project</label>
+      <select id="project">
+        <option>demo-project</option>
+        <option>analytics-prod</option>
+        <option>marketing-sandbox</option>
+        <option>ecomm-data-project</option>
+      </select>
+    </div>
+    <div class="field">
+      <label class="field-label">Dataset</label>
+      <select id="dataset">
+        <option>analytics_123</option>
+        <option>ga4_export</option>
+        <option>lead_events</option>
+        <option>purchase_data</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="chip-row mt-20">
+    <div class="chip"><div class="chip-icon">☁️</div>Connected</div>
+    <div class="chip"><div class="chip-icon">🔒</div>Read-only</div>
+    <div class="chip"><div class="chip-icon">⚡</div>Ready to scan</div>
+  </div>
+
+  <div style="margin-top:28px;">
+    <button class="btn" onclick="runAudit()">⚡ Run Audit</button>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ════════════════════════════
+     S5 — RUNNING
+════════════════════════════ -->
+<div id="s5" class="screen">
+<div class="panel">
+
+  <div class="stepbar" id="sb5"></div>
+
+  <h1>Scanning your<br><em>data…</em></h1>
+  <p class="subtitle">We\'re running checks on your dataset. This usually takes under a minute.</p>
+
+  <div class="pillar-list" id="pillarList"></div>
+
+  <div class="prog-track">
+    <div class="prog-fill" id="progBar"></div>
+  </div>
+  <div class="prog-meta">
+    <span id="progLabel">Starting up…</span>
+    <span id="progPct">0%</span>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ════════════════════════════
+     S6 — RESULTS
+════════════════════════════ -->
+<div id="s6" class="screen">
+<div class="panel">
+
+  <div class="stepbar" id="sb6"></div>
+
+  <!-- Score header -->
+  <div class="results-header">
+    <div class="gauge-wrap">
+      <svg viewBox="0 0 130 130">
+        <circle class="gauge-bg"   cx="65" cy="65" r="54"/>
+        <circle class="gauge-fill red" id="gaugeArc" cx="65" cy="65" r="54"/>
+      </svg>
+      <div class="gauge-center">
+        <div class="gauge-val" id="scoreVal">–</div>
+        <div class="gauge-lbl">/ 100</div>
+      </div>
+    </div>
+
+    <div class="results-meta">
+      <div class="verdict-title" id="verdictTitle">Analysing…</div>
+      <div class="verdict-tag red" id="verdictTag">⚠ Loading</div>
+      <p class="verdict-blurb" id="verdictBlurb"></p>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- What we found -->
+  <div class="section-title">🔍 What we found</div>
+  <div id="findings" class="mb-20"></div>
+
+  <!-- What to do next -->
+  <div class="section-title">🚀 What to do next</div>
+  <div id="actions" class="mb-20"></div>
+
+  <div class="divider"></div>
+
+  <!-- Detailed scores (collapsed) -->
+  <details style="margin-bottom:28px;">
+    <summary>📊 See the detailed scores breakdown</summary>
+    <table class="score-table" style="margin-top:16px;" id="scoreTable"></table>
+  </details>
+
+  <div class="divider"></div>
+
+  <!-- Use cases -->
+  <div class="uc-section">
+    <div class="section-title" style="margin-bottom:6px;">💡 Recommended tools for your business</div>
+    <p style="font-size:13px;color:var(--text-2);margin-bottom:20px;line-height:1.6;">Based on your business type, here are ready-to-run tools in ActivateIQ. Click any to learn more.</p>
+    <div id="useCases"></div>
+  </div>
+
+  <button class="btn" onclick="location.reload()">↺ Run Another Audit</button>
+
+</div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-overlay" id="toast" onclick="closeToast(event)">
+  <div class="toast-box">
+    <div class="toast-icon">🔗</div>
+    <h3>Opening in ActivateIQ</h3>
+    <p>You\'re about to run:</p>
+    <div class="toast-pill">⚡ <span id="toastName">–</span></div>
+    <p>This will open <strong>ActivateIQ</strong> where you can run this tool directly against your connected dataset.</p>
+    <br>
+    <button class="toast-close" onclick="closeToast()">Got it, close</button>
+  </div>
+</div>
+
+
+<script>
+  /* ─── CRITICAL NAVIGATION (FORCE LOADED) ─── */
+function go(from, to) {
+  const fromEl = document.getElementById(from);
+  const toEl = document.getElementById(to);
+  if (fromEl) fromEl.classList.remove('active');
+  if (toEl) toEl.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  const barId = 'sb' + to.replace('s','');
+  if (document.getElementById(barId)) buildStepbar(barId, SCREEN_STEP[to] || 1);
+}
+
+function googleSignIn() {
+  go('s1', 's2');
+}
+/* ─── STATE ─── */
+let selectedBiz   = new Set(['ecommerce']); // default so use cases always show
+let selectedAudit = 'complete';             // default audit type
+let userIdentity  = 'unknown';              // default identity
+
+/* ─── STEPS CONFIG ─── */
+const STEPS = ['Sign In','Business','Audit','Connect','Running','Results'];
+
+function buildStepbar(id, active /* 1-based */) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = '';
+  STEPS.forEach((label, i) => {
+    const n = i + 1;
+    const state = n < active ? 'done' : n === active ? 'active' : '';
+
+    const item = document.createElement('div');
+    item.className = 'step-item' + (state ? ' ' + state : '');
+
+    const dot = document.createElement('div');
+    dot.className = 'step-dot' + (state ? ' ' + state : '');
+    dot.innerHTML = n < active ? '' : `<span>${n}</span>`;
+
+    const lbl = document.createElement('div');
+    lbl.className = 'step-label';
+    lbl.textContent = label;
+
+    item.appendChild(dot); item.appendChild(lbl);
+    el.appendChild(item);
+
+    if (i < STEPS.length - 1) {
+      const line = document.createElement('div');
+      line.className = 'step-line' + (n < active ? ' done' : n === active ? ' active' : '');
+      el.appendChild(line);
+    }
+  });
+}
+
+/* ─── NAVIGATION ─── */
+const SCREEN_STEP = { s1:1, s2:2, s3:3, s3a:3, s4:4, s5:5, s6:6 };
+
+
+/* ─── BUSINESS TYPE ─── */
+function toggleBiz(el, type) {
+  el.classList.toggle('selected');
+  selectedBiz.has(type) ? selectedBiz.delete(type) : selectedBiz.add(type);
+  if (selectedBiz.size === 0) selectedBiz.add(type), el.classList.add('selected'); // keep at least one
+}
+
+/* ─── AUDIT TYPE ─── */
+function pickAudit(el, type) {
+  el.closest('.goal-grid').querySelectorAll('.goal-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedAudit = type;
+}
+
+function auditNext() {
+  if (selectedAudit === 'complete') go('s3', 's3a');
+  else go('s3', 's4');
+}
+
+/* ─── IDENTITY ─── */
+function pickIdentity(el, val) {
+  el.closest('.goal-grid').querySelectorAll('.goal-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  userIdentity = val;
+}
+
+/* ─── PILLAR DEFINITIONS ─── */
+function getPillars() {
+  if (selectedAudit === 'ml') return [
+    { icon:'⚡', name:'How rich is your data?',         sub:'Checking the variety of user actions recorded' },
+    { icon:'📈', name:'Balance of wins vs visits',      sub:'Comparing buyers/leads to total visitors' },
+    { icon:'🪪', name:'Recognising your customers',     sub:'Measuring how often users can be identified' },
+    { icon:'📅', name:'How far back your data goes',    sub:'Checking months of history available' },
+  ];
+  if (selectedAudit === 'event') return [
+    { icon:'📊', name:'Are key actions being captured?',sub:'Checking key funnel steps are tracked' },
+    { icon:'🏷',  name:'Consistent naming of events',   sub:'Reviewing tracking naming conventions' },
+    { icon:'🔁', name:'Duplicate purchase checks',      sub:'Detecting repeated or ghost transactions' },
+    { icon:'🔧', name:'Data completeness',              sub:'Verifying all required fields are present' },
+  ];
+  // complete
+  if (userIdentity === 'yes') return [
+    { icon:'🪪', name:'Recognising your customers',     sub:'How often the same user is identified across visits' },
+    { icon:'💡', name:'Actions that matter',            sub:'Volume of purchases, leads, or sign-ups recorded' },
+    { icon:'📅', name:'History for seasonal patterns',  sub:'How many months of data are available' },
+    { icon:'📡', name:'Freshness of your data',         sub:'Was data recorded in the last 30 days?' },
+    { icon:'🔬', name:'Tracking consistency',           sub:'Are all important events being captured correctly?' },
+  ];
+  return [
+    { icon:'💡', name:'Strength of your signals',      sub:'How much useful behaviour data exists' },
+    { icon:'📡', name:'How fresh your data is',         sub:'Checking recency of events recorded' },
+    { icon:'📅', name:'Long-term trends',               sub:'Identifying seasonal or repeat patterns' },
+    { icon:'🔬', name:'Quality of tracking setup',      sub:'Checking event configuration and coverage' },
+    { icon:'🪪', name:'User recognition (optional)',    sub:'What proportion of users can be identified' },
+  ];
+}
+
+/* ─── RUN AUDIT ─── */
+function runAudit() {
+  go('s4', 's5');
+
+  const pillars = getPillars();
+  const list = document.getElementById('pillarList');
+  list.innerHTML = pillars.map((p, i) => `
+    <div class="pillar-card" id="pc${i}">
+      <div class="pillar-icon">${p.icon}</div>
+      <div class="pillar-body">
+        <div class="pillar-name">${p.name}</div>
+        <div class="pillar-sub">${p.sub}</div>
+      </div>
+      <div class="pillar-status" id="ps${i}">Queued</div>
+    </div>
+  `).join('');
+
+  let step = 0;
+  const total = pillars.length;
+  const labels = [
+    'Connecting to dataset…','Reading user records…','Counting conversions…',
+    'Checking historical depth…','Validating tracking…'
+  ];
+
+  function tick() {
+    if (step >= total) {
+      document.getElementById('progBar').style.width = '100%';
+      document.getElementById('progPct').textContent = '100%';
+      document.getElementById('progLabel').textContent = 'Done! Preparing your report…';
+      setTimeout(() => { go('s5','s6'); showResults(); }, 900);
+      return;
+    }
+
+    const card = document.getElementById('pc' + step);
+    const stat = document.getElementById('ps' + step);
+    card.classList.add('running');
+    stat.innerHTML = 'Checking<span class="blink">_</span>';
+
+    const pct = Math.round((step / total) * 100);
+    document.getElementById('progBar').style.width = pct + '%';
+    document.getElementById('progPct').textContent = pct + '%';
+    document.getElementById('progLabel').textContent = labels[Math.min(step, labels.length-1)];
+
+    setTimeout(() => {
+      card.classList.remove('running'); card.classList.add('done');
+      stat.textContent = '✓ Done';
+      step++; setTimeout(tick, 350);
+    }, 1050);
+  }
+
+  tick();
+}
+
+/* ─── SHOW RESULTS ─── */
+function showResults() {
+  let score = 48, gaugeColor = 'red';
+  if (selectedAudit === 'ml')    { score = 40; gaugeColor = 'red'; }
+  if (selectedAudit === 'event') { score = 100; gaugeColor = 'green'; }
+  if (score >= 70) gaugeColor = 'green';
+  else if (score >= 40) gaugeColor = 'amber';
+
+  // gauge animation
+  const r = 54, C = 2 * Math.PI * r;
+  const arc = document.getElementById('gaugeArc');
+  arc.className = 'gauge-fill ' + gaugeColor;
+  arc.style.strokeDasharray = C;
+  arc.style.strokeDashoffset = C;
+  document.getElementById('scoreVal').textContent = score;
+
+  setTimeout(() => {
+    arc.style.strokeDashoffset = C - (score / 100) * C;
+  }, 200);
+
+  // verdict
+  const titles = {
+    red:   'Your data needs some work first',
+    amber: 'You\'re on the right track',
+    green: 'Great news — your data looks healthy!'
+  };
+  const tags = {
+    red:   ['red',   '⚠ Gaps Found — Action Needed'],
+    amber: ['amber', '⚡ Nearly There'],
+    green: ['green', '✓ Ready to Go'],
+  };
+
+
+  const blurbs = {
+    red:   'Your website tracking is working, but we don\'t yet have enough information about <em>who</em> your visitors are and <em>what</em> they\'re doing. A few targeted improvements will make a big difference.',
+    amber: "Most things look good. A couple of gaps are holding your score back — fix those and you'll unlock AI-powered tools quickly.",
+    green: "Your data is in great shape. You can start using AI-driven tools right away to grow revenue, reduce drop-offs, and understand your customers better.",
+  };
+
+  document.getElementById('verdictTitle').textContent = titles[gaugeColor];
+  const tag = document.getElementById('verdictTag');
+  tag.className = 'verdict-tag ' + tags[gaugeColor][0];
+  tag.textContent = tags[gaugeColor][1];
+  document.getElementById('verdictBlurb').innerHTML = blurbs[gaugeColor];
+
+  renderFindings(score);
+  renderActions(score);
+  renderScoreTable();
+  renderUseCases();
+}
+
+/* ─── FINDINGS ─── */
+function findingHTML(dot, title, desc) {
+  return `<div class="finding-card fade-in">
+    <div class="f-dot ${dot}"></div>
+    <div class="f-body"><div class="f-title">${title}</div><div class="f-desc">${desc}</div></div>
+  </div>`;
+}
+
+function renderFindings(score) {
+  const el = document.getElementById('findings');
+  if (selectedAudit === 'ml') {
+    el.innerHTML =
+      findingHTML('green','You have a rich variety of user actions','199 distinct events recorded — plenty of material for AI models to learn from.') +
+      findingHTML('red','Too few users can be recognised across visits','Less than 5% of users are identifiable, which makes it very hard to predict lifetime value or personalise at scale.');
+  } else if (selectedAudit === 'event') {
+    el.innerHTML =
+      findingHTML('green','Your website tracking looks clean and healthy','No duplicate transactions found. Events appear to be firing correctly.') +
+      findingHTML('green','All key steps in the customer journey are recorded','Funnel steps — from first visit to purchase — are consistently captured.');
+  } else {
+    el.innerHTML =
+      findingHTML('red','Most visitors are anonymous','Only 1 in 20 people visiting your site can be recognised when they return. Think of it like a busy shop where almost everyone wears a mask — it\'s hard to personalise or re-engage them.') +
+      findingHTML('red','Not enough people completing key actions','Fewer than 1 in 100 visitors are completing a purchase or goal. AI tools need more examples of "success" to learn what a good customer looks like.') +
+      findingHTML('amber','Limited history to spot seasonal trends','We don\'t yet have enough past data to understand how behaviour changes across different times of year — like peak sales seasons.') +
+      findingHTML('green','Recent tracking looks solid','Great news — your site has been recording events consistently over the last 30 days. The foundation is in good shape.');
+  }
+}
+
+/* ─── ACTIONS ─── */
+function renderActions(score) {
+  const el = document.getElementById('actions');
+  if (selectedAudit === 'event') {
+    el.innerHTML = findingHTML('green','Your tracking is healthy — nothing urgent to fix','Consider scheduling a quarterly review to keep things in great shape as you add new pages and features.');
+    return;
+  }
+  if (selectedAudit === 'ml') {
+    el.innerHTML =
+      findingHTML('blue','Encourage users to log in or register','Even a simple "Save your preferences" or wishlist feature can dramatically increase the number of users you can recognise — and train better models from.') +
+      findingHTML('blue','Start tracking earlier signals','Instead of only tracking final purchases, also capture product views, wishlist adds, and checkout starts. This 10–20× more data helps AI learn faster.');
+    return;
+  }
+  el.innerHTML =
+    findingHTML('blue','Track smaller steps, not just final purchases','When someone views a product, adds it to their cart, or starts checkout — count those too. This gives AI models far more data to learn from, often 10 to 20 times more, without any website changes.') +
+    findingHTML('blue','Encourage visitors to create an account or log in','When users are logged in, we can recognise them reliably across visits. A simple prompt — like "Save your cart" or a newsletter sign-up — can make a big difference.') +
+    findingHTML('blue','Re-run this audit in 4–6 weeks','Once these changes are live, run the audit again. Your score should improve to 70%+ — enough to unlock the AI-powered tools listed below.');
+}
+
+/* ─── SCORE TABLE ─── */
+function renderScoreTable() {
+  const el = document.getElementById('scoreTable');
+  let rows = [];
+  if (selectedAudit === 'ml') {
+    rows = [
+      ['Data richness (variety of actions)','25/25','green'],
+      ['Balance of wins vs visits','15/30','amber'],
+      ['User recognition rate','0/25','red'],
+      ['Historical depth','0/20','red'],
+    ];
+  } else if (selectedAudit === 'event') {
+    rows = [
+      ['Key actions captured','30/30','green'],
+      ['No duplicate purchases','25/25','green'],
+      ['Consistent event naming','20/20','green'],
+      ['Data completeness','25/25','green'],
+    ];
+  } else {
+    rows = [
+      ['User recognition','0','red'],
+      ['Conversion volume','0','red'],
+      ['Historical depth','3.3','amber'],
+      ['Data freshness','25','green'],
+      ['Tracking quality','20','green'],
+    ];
+  }
+  el.innerHTML = `<thead><tr><th>Area Checked</th><th>What We Found</th><th>Score</th></tr></thead>
+  <tbody>` + rows.map(r => `
+    <tr>
+      <td>${r[0]}</td>
+      <td style="color:var(--text-3)">–</td>
+      <td class="s-${r[2]}">${r[1]}</td>
+    </tr>`).join('') + `</tbody>`;
+}
+
+/* ─── USE CASES ─── */
+const UC_DATA = {
+  ecommerce: [
+    { icon:'📊', goal:'Grow Revenue',          name:'Product & Page Engagement Analyzer',          benefit:'See which products and pages users spend the most time on before buying.' },
+    { icon:'🛒', goal:'Reduce Drop-offs',       name:'Cart & Checkout Abandonment Tracker',          benefit:'Find exactly where — and for which products — people leave without buying.' },
+    { icon:'📣', goal:'Improve Marketing ROI',  name:'Campaign & Traffic Abandonment Insights',      benefit:'Identify which ad channels bring buyers vs. those who just browse and leave.' },
+    { icon:'🗺️', goal:'Understand Buying Journey',name:'Multi-Session Purchase Journey',             benefit:'See how many visits it takes before someone finally buys.' },
+    { icon:'🎁', goal:'Increase Order Value',   name:'Frequently Bought Together Finder',            benefit:'Discover which products are often bought together — perfect for bundles and upsells.' },
+  ],
+  leadgen: [
+    { icon:'📋', goal:'More Form Submissions',  name:'Lead Journey Drop-off Analyzer',               benefit:'Find the exact point where people abandon your form or enquiry page.' },
+    { icon:'🎯', goal:'Better Lead Quality',     name:'Window Shopper vs Serious Visitor Segmentation',benefit:'Separate casual browsers from people who are close to getting in touch.' },
+    { icon:'🔍', goal:'Improve Lead Quality',   name:'Source & Device Lead Quality Insights',         benefit:'See which marketing channels and devices bring you the most valuable leads.' },
+    { icon:'🛤️', goal:'Path to Conversion',     name:'User Path Before Conversion',                  benefit:'See which pages people visit and what they read before submitting a form.' },
+    { icon:'👥', goal:'Optimise Spend',          name:'Campaign Performance by Demographics',          benefit:'Find out which audience groups respond best to your campaigns.' },
+  ],
+  publisher: [
+    { icon:'📺', goal:'More Engagement',         name:'Content & Screen Engagement Analyzer',         benefit:'See which pages or screens users spend the most time on.' },
+    { icon:'🔄', goal:'Better Retention',        name:'New vs Returning User Behavior',                benefit:'Understand how loyal users behave differently from first-time visitors.' },
+    { icon:'🧭', goal:'Navigation Clarity',      name:'Session Behavior & Navigation Flow',            benefit:'Learn how users move through your content — and where they get lost.' },
+    {
+ icon:'💤',
+ goal:'Re-engage Users',
+ name:'Inactive User Identification',
+ benefit:'Spot users who haven\'t returned recently and might need a nudge.'
+},
+    { icon:'💻', goal:'Cross-Device Experience', name:'Cross-Device User Behavior Tracker',            benefit:'Understand how your audience switches between phones, tablets, and desktops.' },
+  ],
+};
+
+function ucCard(uc) {
+
+  const btn = document.createElement('button');
+  btn.className = 'uc-card fade-in';
+
+  btn.onclick = function() {
+    showToast(uc.name);
+  };
+
+  btn.innerHTML = `
+      <div class="uc-icon">${uc.icon}</div>
+
+      <div class="uc-body">
+          <div class="uc-goal">${uc.goal}</div>
+          <div class="uc-name">${uc.name}</div>
+          <div class="uc-benefit">${uc.benefit}</div>
+      </div>
+
+      <div class="uc-arrow">›</div>
+  `;
+
+  return btn.outerHTML;
+}
+
+const BIZ_LABELS = { ecommerce:'🛒 Online Store', leadgen:'📈 Service & Leads', publisher:'📱 Content & Apps' };
+
+function renderUseCases() {
+  const el = document.getElementById('useCases');
+  const keys = [...selectedBiz];
+  if (keys.length === 0) { el.innerHTML = ''; return; }
+
+  el.innerHTML = keys.map(k => `
+    <div class="uc-group">
+      <div class="uc-group-label">${BIZ_LABELS[k]}</div>
+      ${UC_DATA[k].map(ucCard).join('')}
+    </div>
+  `).join('');
+}
+
+/* ─── TOAST ─── */
+function showToast(name) {
+  document.getElementById('toastName').textContent = name;
+  document.getElementById('toast').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeToast(e) {
+  if (e && e.target !== document.getElementById('toast') && !e.target.classList.contains('toast-close')) return;
+  document.getElementById('toast').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { document.getElementById('toast').classList.remove('show'); document.body.style.overflow = ''; }
+});
+
+buildStepbar('sb2',2);
+buildStepbar('sb3',3);
+buildStepbar('sb3a',3);
+buildStepbar('sb4',4);
+buildStepbar('sb5',5);
+buildStepbar('sb6',6);
+console.log("SCRIPT FULLY LOADED");
+console.log(typeof go);
+
+</script>
+</body>
+</html>

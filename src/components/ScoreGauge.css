@@ -1,0 +1,30 @@
+.gauge-wrap {
+  position: relative;
+  width: 146px;
+  height: 146px;
+}
+.gauge {
+  transform: rotate(-90deg);
+  width: 146px;
+  height: 146px;
+  filter: drop-shadow(0 8px 18px rgba(59, 91, 219, 0.2));
+}
+.gauge-bg,
+.gauge-fill {
+  fill: none;
+  stroke-width: 11;
+}
+.gauge-bg {
+  stroke: #e5e9f7;
+}
+.gauge-fill {
+  stroke: url(#scoreGradient);
+  transition: stroke-dashoffset 1.3s var(--spring);
+}
+.gauge-score {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font: 750 2.15rem var(--font-head);
+}

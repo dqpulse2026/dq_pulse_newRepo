@@ -1,0 +1,30 @@
+.pillar-card {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(180deg, #fff 0%, #fcfdff 100%);
+  transition: all var(--t) var(--ease);
+}
+.pillar-card.running {
+  border-color: var(--blue);
+  background: linear-gradient(180deg, var(--blue-pale) 0%, #f4f7ff 100%);
+  box-shadow: 0 0 0 1px rgba(59, 91, 219, 0.15), 0 8px 20px rgba(59, 91, 219, 0.12);
+}
+.pillar-card.done {
+  border-color: var(--green);
+  background: linear-gradient(180deg, var(--green-pale) 0%, #f3fff6 100%);
+  box-shadow: 0 0 0 1px rgba(47, 158, 68, 0.15), 0 8px 20px rgba(47, 158, 68, 0.1);
+}
+.pillar-icon {
+  width: 20px;
+}
+.pillar-card.running .pillar-icon {
+  animation: pulseRing 1s infinite;
+}
+.blink {
+  margin-left: auto;
+  animation: blink 1s steps(2, start) infinite;
+}

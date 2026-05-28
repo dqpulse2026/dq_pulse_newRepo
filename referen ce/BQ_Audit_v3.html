@@ -1,0 +1,1624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>BQ Audit Tool</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,300&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg:        #f4f6f9;
+  --bg2:       #ffffff;
+  --bg3:       #f8f9fb;
+  --surface:   #f1f3f7;
+  --surface2:  #eaecf2;
+  --border:    #e2e5ed;
+  --border2:   #c8cdd9;
+
+  --blue:      #2563eb;
+  --blue-light:#eff4ff;
+  --blue-mid:  #dbeafe;
+  --blue-dark: #1d4ed8;
+  --green:     #16a34a;
+  --green-light:#f0fdf4;
+  --green-mid: #bbf7d0;
+  --amber:     #d97706;
+  --amber-light:#fffbeb;
+  --amber-mid: #fde68a;
+  --red:       #dc2626;
+  --red-light: #fff1f2;
+  --red-mid:   #fecdd3;
+
+  --text-1:    #0f172a;
+  --text-2:    #475569;
+  --text-3:    #94a3b8;
+
+  --radius-sm: 8px;
+  --radius:    12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+
+  --font-mono: 'Space Mono', monospace;
+  --font-body: 'DM Sans', sans-serif;
+
+  --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --spring:     0.4s cubic-bezier(0.16, 1, 0.3, 1);
+
+  --shadow-sm:  0 1px 3px rgba(15,23,42,0.07), 0 1px 2px rgba(15,23,42,0.04);
+  --shadow:     0 4px 12px rgba(15,23,42,0.08), 0 1px 3px rgba(15,23,42,0.05);
+  --shadow-md:  0 8px 24px rgba(15,23,42,0.1),  0 2px 6px rgba(15,23,42,0.06);
+  --shadow-lg:  0 16px 48px rgba(15,23,42,0.12), 0 4px 12px rgba(15,23,42,0.07);
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 32px 20px 48px;
+  overflow-x: hidden;
+}
+
+/* ── SUBTLE BG PATTERN ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 20% 10%, rgba(37,99,235,0.04) 0%, transparent 50%),
+    radial-gradient(circle at 80% 90%, rgba(22,163,74,0.03) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── WRAPPER ── */
+.wrapper {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 860px;
+  margin-top: 12px;
+}
+
+/* ── SCREEN ── */
+.screen { display: none; animation: screenIn var(--spring) both; }
+.screen.active { display: block; }
+
+@keyframes screenIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.98); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ── PANEL ── */
+.panel {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 48px;
+  box-shadow: var(--shadow-md);
+  position: relative;
+  overflow: hidden;
+}
+
+.panel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--blue), #60a5fa, var(--green));
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+}
+
+/* ── LOGO CHIP ── */
+.logo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--blue-light);
+  border: 1px solid var(--blue-mid);
+  border-radius: 50px;
+  padding: 5px 14px 5px 8px;
+  margin-bottom: 28px;
+}
+
+.logo-dot {
+  width: 22px; height: 22px;
+  background: linear-gradient(135deg, var(--blue), var(--blue-dark));
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px;
+}
+
+.logo-chip > span {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--blue);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+/* ── HEADINGS ── */
+h1 {
+  font-size: clamp(24px, 3.5vw, 34px);
+  font-weight: 700;
+  color: var(--text-1);
+  line-height: 1.2;
+  margin-bottom: 10px;
+  letter-spacing: -0.02em;
+}
+
+h1 em {
+  font-style: normal;
+  color: var(--blue);
+}
+
+.subtitle {
+  color: var(--text-2);
+  font-size: 15px;
+  line-height: 1.65;
+  margin-bottom: 32px;
+}
+
+/* ── STEP BAR ── */
+.stepbar {
+  display: flex;
+  align-items: center;
+  margin-bottom: 36px;
+}
+
+.step-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+}
+
+.step-dot {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-3);
+  background: white;
+  transition: var(--transition);
+  position: relative; z-index: 1;
+}
+
+.step-dot.active {
+  border-color: var(--blue);
+  color: var(--blue);
+  background: var(--blue-light);
+  box-shadow: 0 0 0 4px rgba(37,99,235,0.1);
+}
+
+.step-dot.done {
+  border-color: var(--green);
+  background: var(--green);
+  color: white;
+}
+
+.step-dot.done::after { content: '✓'; font-size: 12px; font-family: var(--font-body); font-weight: 700; }
+.step-dot.done span { display: none; }
+
+.step-line {
+  height: 2px; flex: 1;
+  background: var(--border);
+  margin-top: -17px;
+  transition: var(--transition);
+}
+
+.step-line.done { background: var(--green); }
+.step-line.active { background: linear-gradient(90deg, var(--green), var(--blue)); }
+
+.step-label {
+  font-size: 10px; font-weight: 500;
+  color: var(--text-3); text-align: center;
+  white-space: nowrap;
+  transition: var(--transition);
+  font-family: var(--font-mono);
+  letter-spacing: 0.03em;
+}
+
+.step-item.active .step-label { color: var(--blue); }
+.step-item.done .step-label   { color: var(--green); }
+
+/* ── FIELDS ── */
+.field { margin-bottom: 16px; }
+
+.field-label {
+  display: block;
+  font-size: 11px; font-weight: 600;
+  color: var(--text-2);
+  text-transform: uppercase; letter-spacing: 0.1em;
+  margin-bottom: 8px;
+  font-family: var(--font-mono);
+}
+
+input[type="email"],
+input[type="password"],
+select {
+  width: 100%;
+  padding: 13px 16px;
+  background: var(--bg3);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 15px;
+  font-family: var(--font-body);
+  color: var(--text-1);
+  transition: var(--transition);
+  -webkit-appearance: none; appearance: none;
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--blue);
+  background: white;
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+}
+
+input::placeholder { color: var(--text-3); }
+
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394a3b8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 40px;
+  cursor: pointer;
+}
+
+/* ── GOOGLE SIGN IN BUTTON ── */
+.btn-google {
+  width: 100%;
+  padding: 14px 20px;
+  background: white;
+  color: #3c4043;
+  border: 1.5px solid var(--border2);
+  border-radius: var(--radius);
+  font-weight: 600;
+  font-size: 15px;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.btn-google:hover {
+  background: #f8f9fa;
+  border-color: #aab0bb;
+  box-shadow: var(--shadow);
+  transform: translateY(-1px);
+}
+
+.btn-google:active { transform: translateY(0); }
+
+.google-logo {
+  width: 20px; height: 20px; flex-shrink: 0;
+}
+
+.divider-row {
+  display: flex; align-items: center; gap: 12px;
+  margin: 20px 0;
+}
+
+.divider-row::before,
+.divider-row::after {
+  content: ''; flex: 1;
+  height: 1px; background: var(--border);
+}
+
+.divider-row span {
+  font-size: 12px; color: var(--text-3);
+  white-space: nowrap; font-family: var(--font-mono);
+}
+
+/* ── MAIN CTA BUTTON ── */
+.btn {
+  width: 100%;
+  padding: 15px 24px;
+  background: linear-gradient(135deg, var(--blue), var(--blue-dark));
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  font-weight: 700; font-size: 15px;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: var(--transition);
+  position: relative; overflow: hidden;
+  box-shadow: 0 4px 16px rgba(37,99,235,0.3);
+  margin-top: 8px;
+}
+
+.btn::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+  left: -100%;
+  transition: left 0.5s ease;
+}
+
+.btn:hover:not(:disabled)::before { left: 100%; }
+.btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(37,99,235,0.38);
+}
+
+.btn:active:not(:disabled) { transform: translateY(0); }
+
+.btn:disabled {
+  background: var(--surface2);
+  color: var(--text-3);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* ── GOAL CARDS (multi-select) ── */
+.goal-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.goal-card {
+  padding: 22px 14px;
+  background: var(--bg3);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  text-align: center;
+  transition: var(--spring);
+  position: relative;
+  user-select: none;
+}
+
+.goal-check {
+  position: absolute;
+  top: 10px; right: 10px;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--border2);
+  background: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px;
+  color: transparent;
+  transition: var(--transition);
+}
+
+.goal-card.selected .goal-check {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: white;
+}
+
+.goal-card:hover {
+  border-color: var(--blue-mid);
+  background: var(--blue-light);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow);
+}
+
+.goal-card.selected {
+  border-color: var(--blue);
+  background: var(--blue-light);
+  transform: translateY(-3px);
+  box-shadow: 0 4px 16px rgba(37,99,235,0.14);
+}
+
+.goal-icon { font-size: 28px; display: block; margin-bottom: 10px; }
+
+.goal-label {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-2);
+  line-height: 1.3;
+  transition: var(--transition);
+}
+
+.goal-card.selected .goal-label { color: var(--blue); }
+
+.select-hint {
+  font-size: 12px;
+  color: var(--text-3);
+  text-align: center;
+  margin-bottom: 16px;
+  font-family: var(--font-mono);
+}
+
+/* ── PILLARS ── */
+.pillar-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+
+.pillar {
+  display: flex; align-items: center; gap: 14px;
+  padding: 15px 18px;
+  background: var(--bg3);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  transition: var(--transition);
+}
+
+.pillar-icon {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  background: white;
+  border: 1.5px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0;
+  transition: var(--transition);
+}
+
+.pillar-body { flex: 1; min-width: 0; }
+
+.pillar-name {
+  font-size: 14px; font-weight: 600;
+  color: var(--text-1);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.pillar-sub {
+  font-size: 11px; color: var(--text-3);
+  margin-top: 2px;
+  font-family: var(--font-mono);
+}
+
+.pillar-status {
+  font-size: 12px; font-weight: 600;
+  font-family: var(--font-mono);
+  color: var(--text-3);
+  white-space: nowrap; flex-shrink: 0;
+}
+
+.pillar.running {
+  border-color: var(--blue);
+  background: var(--blue-light);
+}
+
+.pillar.running .pillar-icon {
+  border-color: var(--blue-mid);
+  background: var(--blue-mid);
+}
+
+.pillar.running .pillar-status { color: var(--blue); }
+
+.pillar.complete {
+  border-color: #86efac;
+  background: var(--green-light);
+}
+
+.pillar.complete .pillar-icon {
+  border-color: var(--green-mid);
+  background: var(--green-mid);
+}
+
+.pillar.complete .pillar-status { color: var(--green); }
+
+@keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+.cursor { animation: blink 0.9s step-start infinite; }
+
+@keyframes iconPulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(37,99,235,0.3); }
+  50%      { box-shadow: 0 0 0 5px rgba(37,99,235,0); }
+}
+
+.pillar.running .pillar-icon { animation: iconPulse 1.2s ease-in-out infinite; }
+
+/* ── PROGRESS BAR ── */
+.prog-wrap {
+  background: var(--surface);
+  border-radius: 50px;
+  height: 6px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.prog-fill {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, var(--blue), #60a5fa);
+  border-radius: 50px;
+  transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+  position: relative; overflow: hidden;
+}
+
+.prog-fill::after {
+  content: '';
+  position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+  animation: shimmer 1.8s infinite;
+}
+
+@keyframes shimmer { to { left: 200%; } }
+
+.prog-meta { display: flex; justify-content: space-between; margin-top: 8px; }
+.prog-meta span { font-family: var(--font-mono); font-size: 11px; color: var(--text-3); }
+#prog-pct { color: var(--blue); font-weight: 700; }
+
+/* ── SCORE RING ── */
+.score-row {
+  display: flex; align-items: flex-start; gap: 24px;
+  margin-bottom: 28px;
+}
+
+.score-ring { position: relative; width: 110px; height: 110px; flex-shrink: 0; }
+.score-ring svg { width: 110px; height: 110px; transform: rotate(-90deg); }
+
+.ring-bg { fill: none; stroke: var(--surface2); stroke-width: 8; }
+.ring-fill {
+  fill: none; stroke-width: 8; stroke-linecap: round;
+  stroke-dasharray: 283;
+  stroke-dashoffset: 283;
+  transition: stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1);
+}
+
+.ring-fill.fail { stroke: var(--red); }
+.ring-fill.warn { stroke: var(--amber); }
+.ring-fill.pass { stroke: var(--green); }
+
+.score-center {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+
+.score-val {
+  font-family: var(--font-mono);
+  font-size: 24px; font-weight: 700;
+  color: var(--text-1); line-height: 1;
+}
+
+.score-unit { font-family: var(--font-mono); font-size: 10px; color: var(--text-3); }
+
+.score-info { flex: 1; padding-top: 4px; }
+
+.score-verdict {
+  font-size: 20px; font-weight: 700;
+  color: var(--text-1); margin-bottom: 8px;
+  line-height: 1.2;
+}
+
+.verdict-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 12px; border-radius: 50px;
+  font-size: 12px; font-weight: 600;
+  font-family: var(--font-mono); margin-bottom: 10px;
+}
+
+.verdict-badge.fail { background: var(--red-light); border: 1px solid var(--red-mid); color: var(--red); }
+.verdict-badge.pass { background: var(--green-light); border: 1px solid var(--green-mid); color: var(--green); }
+.verdict-badge.warn { background: var(--amber-light); border: 1px solid var(--amber-mid); color: var(--amber); }
+
+.score-blurb { font-size: 14px; color: var(--text-2); line-height: 1.6; }
+
+/* ── WHAT THIS MEANS SECTION ── */
+.wtm-section {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.wtm-section h3 {
+  font-size: 15px; font-weight: 700;
+  color: var(--text-1); margin-bottom: 16px;
+  display: flex; align-items: center; gap: 8px;
+}
+
+.finding-row {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.finding-row:last-child { border-bottom: none; padding-bottom: 0; }
+.finding-row:first-of-type { padding-top: 0; }
+
+.finding-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  margin-top: 6px; flex-shrink: 0;
+}
+
+.finding-dot.bad  { background: var(--red); }
+.finding-dot.warn { background: var(--amber); }
+.finding-dot.good { background: var(--green); }
+
+.finding-text { flex: 1; }
+
+.finding-title {
+  font-size: 14px; font-weight: 600;
+  color: var(--text-1); margin-bottom: 3px;
+}
+
+.finding-desc {
+  font-size: 13px; color: var(--text-2); line-height: 1.55;
+}
+
+/* ── RESULTS TABLE ── */
+.results-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 4px;
+  margin-bottom: 24px;
+}
+
+.results-table th {
+  font-family: var(--font-mono);
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text-3); padding: 0 14px 8px;
+  text-align: left;
+}
+
+.results-table td {
+  padding: 12px 14px;
+  background: var(--bg3);
+  font-size: 13px; color: var(--text-2);
+  border: 1px solid transparent;
+  transition: var(--transition);
+}
+
+.results-table td:first-child {
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+  font-weight: 600; color: var(--text-1); white-space: nowrap;
+}
+
+.results-table td:last-child {
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  text-align: right;
+  font-family: var(--font-mono); font-weight: 700; font-size: 14px;
+}
+
+.results-table tr:hover td { background: var(--surface2); }
+
+.score-good { color: var(--green) !important; }
+.score-warn { color: var(--amber) !important; }
+.score-bad  { color: var(--red)   !important; }
+
+/* ── DIVIDER ── */
+.divider { height: 1px; background: var(--border); margin: 24px 0; }
+
+/* ── USE CASES SECTION ── */
+.uc-section { margin-bottom: 28px; }
+
+.uc-section-title {
+  font-size: 16px; font-weight: 700;
+  color: var(--text-1); margin-bottom: 4px;
+}
+
+.uc-section-sub {
+  font-size: 13px; color: var(--text-2);
+  margin-bottom: 16px; line-height: 1.5;
+}
+
+.uc-group { margin-bottom: 20px; }
+
+.uc-group-label {
+  font-family: var(--font-mono);
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--text-3); margin-bottom: 8px;
+  padding-left: 2px;
+}
+
+.uc-card {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 14px 16px;
+  background: var(--bg3);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: var(--spring);
+  position: relative;
+  overflow: hidden;
+  text-align: left;
+  width: 100%;
+  font-family: var(--font-body);
+}
+
+.uc-card::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--blue);
+  transform: scaleY(0);
+  transform-origin: center;
+  transition: transform 0.25s ease;
+  border-radius: 3px 0 0 3px;
+}
+
+.uc-card:hover { border-color: var(--blue-mid); background: var(--blue-light); transform: translateX(3px); box-shadow: var(--shadow-sm); }
+.uc-card:hover::before { transform: scaleY(1); }
+
+.uc-card-icon {
+  width: 32px; height: 32px;
+  background: var(--blue-light);
+  border: 1px solid var(--blue-mid);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; flex-shrink: 0;
+}
+
+.uc-card-body { flex: 1; min-width: 0; }
+
+.uc-card-name {
+  font-size: 13px; font-weight: 700;
+  color: var(--text-1); margin-bottom: 3px;
+  line-height: 1.3;
+}
+
+.uc-card-goal {
+  font-size: 11px; color: var(--blue);
+  font-family: var(--font-mono);
+  margin-bottom: 4px;
+}
+
+.uc-card-benefit {
+  font-size: 12px; color: var(--text-2);
+  line-height: 1.5;
+}
+
+.uc-card-arrow {
+  color: var(--text-3); font-size: 16px;
+  flex-shrink: 0; margin-top: 6px;
+  transition: var(--transition);
+}
+
+.uc-card:hover .uc-card-arrow { color: var(--blue); transform: translateX(3px); }
+
+/* ── REDIRECT TOAST ── */
+.toast-overlay {
+  position: fixed; inset: 0;
+  background: rgba(15,23,42,0.45);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.25s ease;
+  padding: 20px;
+}
+
+.toast-overlay.show { opacity: 1; pointer-events: all; }
+
+.toast-box {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 36px 40px;
+  max-width: 420px; width: 100%;
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+  transform: scale(0.94) translateY(12px);
+  transition: transform 0.35s cubic-bezier(0.16,1,0.3,1);
+}
+
+.toast-overlay.show .toast-box { transform: none; }
+
+.toast-icon {
+  width: 52px; height: 52px;
+  background: var(--blue-light);
+  border: 1.5px solid var(--blue-mid);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  margin: 0 auto 16px;
+}
+
+.toast-box h3 {
+  font-size: 17px; font-weight: 700;
+  color: var(--text-1); margin-bottom: 8px;
+}
+
+.toast-box p {
+  font-size: 14px; color: var(--text-2);
+  line-height: 1.6; margin-bottom: 6px;
+}
+
+.toast-tool {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--blue-light);
+  border: 1px solid var(--blue-mid);
+  border-radius: 50px;
+  padding: 5px 14px;
+  font-size: 13px; font-weight: 700;
+  color: var(--blue);
+  margin: 10px 0 20px;
+}
+
+.toast-close {
+  padding: 11px 28px;
+  background: var(--text-1);
+  color: white;
+  border: none; border-radius: var(--radius);
+  font-size: 14px; font-weight: 600;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.toast-close:hover { background: var(--text-2); }
+
+/* ── UTILITY ── */
+.mt-16 { margin-top: 16px; }
+.mt-24 { margin-top: 24px; }
+
+.fade-item {
+  opacity: 0; transform: translateY(10px);
+  animation: fadeItem 0.35s var(--spring) forwards;
+}
+
+@keyframes fadeItem { to { opacity: 1; transform: none; } }
+
+.fade-item:nth-child(1) { animation-delay: 0.04s; }
+.fade-item:nth-child(2) { animation-delay: 0.08s; }
+.fade-item:nth-child(3) { animation-delay: 0.12s; }
+.fade-item:nth-child(4) { animation-delay: 0.16s; }
+.fade-item:nth-child(5) { animation-delay: 0.20s; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 600px) {
+  body { padding: 16px 12px 40px; }
+  .panel { padding: 28px 20px; }
+
+  .goal-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .goal-card {
+    padding: 14px 16px;
+    display: flex; text-align: left;
+    align-items: center; gap: 14px;
+  }
+
+  .goal-icon { font-size: 24px; margin-bottom: 0; }
+
+  .step-label { display: none; }
+
+  .score-row { flex-direction: column; align-items: center; text-align: center; gap: 18px; }
+
+  .results-table th:nth-child(2),
+  .results-table td:nth-child(2) { display: none; }
+}
+
+@media (max-width: 380px) {
+  h1 { font-size: 21px; }
+  .panel { padding: 22px 14px; }
+}
+</style>
+</head>
+<body>
+
+<div class="wrapper">
+
+<!-- ══════════════════════════════
+     SCREEN 1 — GOOGLE SIGN IN
+══════════════════════════════ -->
+<div id="s1" class="screen active">
+  <div class="panel">
+
+    <div class="logo-chip">
+      <div class="logo-dot">⚡</div>
+      <span>BQ Audit Tool</span>
+    </div>
+
+    <h1>Data <em>Readiness</em> Audit</h1>
+    <p class="subtitle">Find out if your BigQuery data is ready for AI-driven marketing. Takes about 30 seconds — no technical knowledge needed.</p>
+
+    <button class="btn-google" onclick="googleSignIn()">
+      <!-- Official Google G logo SVG -->
+      <svg class="google-logo" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+      </svg>
+      Continue with Google
+    </button>
+
+    <div class="divider-row"><span>or sign in with email</span></div>
+
+    <div class="field">
+      <label class="field-label">Email</label>
+      <input type="email" placeholder="you@company.com" value="demo@company.com">
+    </div>
+
+    <div class="field">
+      <label class="field-label">Access Code</label>
+      <input type="password" placeholder="Enter your code" value="audit123">
+    </div>
+
+    <button class="btn" onclick="go(1,2)">Start Audit →</button>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     SCREEN 2 — BUSINESS GOALS (multi)
+══════════════════════════════ -->
+<div id="s2" class="screen">
+  <div class="panel">
+
+    <div class="stepbar" id="steps2"></div>
+
+    <h1>What are your <em>Business Goals?</em></h1>
+    <p class="subtitle">Select everything that applies — we'll tailor the audit and recommendations to what matters most for your business.</p>
+
+    <p class="select-hint">✓ Select one or more</p>
+
+    <div class="goal-grid">
+      <div class="goal-card fade-item" onclick="toggleGoal(this)" data-type="ecommerce">
+        <div class="goal-check">✓</div>
+        <span class="goal-icon">🛒</span>
+        <span class="goal-label">Online Store<br><small style="font-weight:400;color:var(--text-3)">E-commerce</small></span>
+      </div>
+      <div class="goal-card fade-item" onclick="toggleGoal(this)" data-type="leadgen">
+        <div class="goal-check">✓</div>
+        <span class="goal-icon">📈</span>
+        <span class="goal-label">Service &amp; Leads<br><small style="font-weight:400;color:var(--text-3)">Lead Generation</small></span>
+      </div>
+      <div class="goal-card fade-item" onclick="toggleGoal(this)" data-type="publisher">
+        <div class="goal-check">✓</div>
+        <span class="goal-icon">📱</span>
+        <span class="goal-label">Content &amp; Apps<br><small style="font-weight:400;color:var(--text-3)">Publisher</small></span>
+      </div>
+    </div>
+
+    <button id="b2" class="btn" disabled onclick="go(2,3)">Continue →</button>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     SCREEN 3 — CONNECT DATA
+══════════════════════════════ -->
+<div id="s3" class="screen">
+  <div class="panel">
+
+    <div class="stepbar" id="steps3"></div>
+
+    <h1>Connect Your <em>Data</em></h1>
+    <p class="subtitle">Select the BigQuery project and dataset you'd like us to audit.</p>
+
+    <div class="field fade-item">
+      <label class="field-label">BQ Project</label>
+      <select id="proj" onchange="chkReady()">
+        <option value="">Select Project</option>
+        <option selected>demo-project</option>
+        <option>prod-analytics</option>
+        <option>ml-warehouse</option>
+      </select>
+    </div>
+
+    <div class="field fade-item">
+      <label class="field-label">Dataset</label>
+      <select id="dset" onchange="chkReady()">
+        <option value="">Select Dataset</option>
+        <option selected>analytics_123</option>
+        <option>events_raw</option>
+        <option>ga4_export</option>
+      </select>
+    </div>
+
+    <button id="b3" class="btn" disabled onclick="startAudit()">⚡ Run Audit</button>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     SCREEN 4 — RUNNING
+══════════════════════════════ -->
+<div id="s4" class="screen">
+  <div class="panel">
+
+    <div class="stepbar" id="steps4"></div>
+
+    <h1>Running <em>Audit…</em></h1>
+    <p class="subtitle">We're checking 5 key signals in your data. This usually takes under a minute.</p>
+
+    <div class="pillar-list" id="pillars">
+      <div class="pillar" id="p1">
+        <div class="pillar-icon">🪪</div>
+        <div class="pillar-body">
+          <div class="pillar-name">User Identity Coverage</div>
+          <div class="pillar-sub">Checking user_id / client_id match rates</div>
+        </div>
+        <div class="pillar-status" id="ps1">Queued</div>
+      </div>
+      <div class="pillar" id="p2">
+        <div class="pillar-icon">💡</div>
+        <div class="pillar-body">
+          <div class="pillar-name">Conversion Volume &amp; Density</div>
+          <div class="pillar-sub">Evaluating conversion rate vs traffic</div>
+        </div>
+        <div class="pillar-status" id="ps2">Queued</div>
+      </div>
+      <div class="pillar" id="p3">
+        <div class="pillar-icon">📅</div>
+        <div class="pillar-body">
+          <div class="pillar-name">Historical Data (Seasonality)</div>
+          <div class="pillar-sub">Checking months of lookback available</div>
+        </div>
+        <div class="pillar-status" id="ps3">Queued</div>
+      </div>
+      <div class="pillar" id="p4">
+        <div class="pillar-icon">📡</div>
+        <div class="pillar-body">
+          <div class="pillar-name">Recent Activity (Recency)</div>
+          <div class="pillar-sub">Scanning last 30 days event freshness</div>
+        </div>
+        <div class="pillar-status" id="ps4">Queued</div>
+      </div>
+      <div class="pillar" id="p5">
+        <div class="pillar-icon">🔬</div>
+        <div class="pillar-body">
+          <div class="pillar-name">Event Tracking Health</div>
+          <div class="pillar-sub">Verifying schema consistency &amp; coverage</div>
+        </div>
+        <div class="pillar-status" id="ps5">Queued</div>
+      </div>
+    </div>
+
+    <div class="prog-wrap">
+      <div class="prog-fill" id="bar"></div>
+    </div>
+    <div class="prog-meta">
+      <span id="prog-label">Initialising…</span>
+      <span id="prog-pct">0%</span>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     SCREEN 5 — RESULTS
+══════════════════════════════ -->
+<div id="s5" class="screen">
+  <div class="panel">
+
+    <div class="stepbar" id="steps5"></div>
+
+    <h1>Your Audit <em>Report</em></h1>
+    <p class="subtitle">Here's a summary of what we found in <strong>demo-project / analytics_123</strong></p>
+
+    <!-- Score ring + verdict -->
+    <div class="score-row fade-item">
+      <div class="score-ring">
+        <svg viewBox="0 0 110 110">
+          <circle class="ring-bg" cx="55" cy="55" r="45"/>
+          <circle class="ring-fill fail" id="ring" cx="55" cy="55" r="45"/>
+        </svg>
+        <div class="score-center">
+          <span class="score-val">48%</span>
+          <span class="score-unit">score</span>
+        </div>
+      </div>
+
+      <div class="score-info">
+        <div class="score-verdict">Your data is not quite ready yet</div>
+        <div class="verdict-badge fail">⚠ Gaps Found — Action Needed</div>
+        <p class="score-blurb">Your website tracking is working, but we don't yet have enough data about <em>who</em> your users are and <em>what</em> actions they take. This limits what AI tools can do for you right now.</p>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- What this means — manager-friendly -->
+    <div class="wtm-section fade-item">
+      <h3>🔍 What did we find?</h3>
+
+      <div class="finding-row">
+        <div class="finding-dot bad"></div>
+        <div class="finding-text">
+          <div class="finding-title">We can't identify most of your visitors</div>
+          <div class="finding-desc">Only 1 in 20 people visiting your site can be recognised when they come back. Think of it like a shop where almost everyone wears a mask — it's hard to give them a personalised experience or retarget them with ads.</div>
+        </div>
+      </div>
+
+      <div class="finding-row">
+        <div class="finding-dot bad"></div>
+        <div class="finding-text">
+          <div class="finding-title">Too few people are taking the action you care about</div>
+          <div class="finding-desc">Less than 1 in 100 visitors are completing a purchase or key goal. AI models need more examples of "success" to learn what a good customer looks like — similar to training a new sales rep with too few real examples.</div>
+        </div>
+      </div>
+
+      <div class="finding-row">
+        <div class="finding-dot warn"></div>
+        <div class="finding-text">
+          <div class="finding-title">Limited history to spot seasonal patterns</div>
+          <div class="finding-desc">We don't have enough past data to understand how your customers behave across different times of the year (e.g. peak sales seasons, holidays).</div>
+        </div>
+      </div>
+
+      <div class="finding-row">
+        <div class="finding-dot good"></div>
+        <div class="finding-text">
+          <div class="finding-title">Your recent tracking looks healthy</div>
+          <div class="finding-desc">Good news — your website is actively recording events and the data from the last 30 days is consistent. The infrastructure is in good shape.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- What to do next -->
+    <div class="wtm-section fade-item" style="border-left: 3px solid var(--blue);">
+      <h3>✅ What should we do next?</h3>
+
+      <div class="finding-row">
+        <div class="finding-dot" style="background:var(--blue);"></div>
+        <div class="finding-text">
+          <div class="finding-title">Count smaller wins, not just final purchases</div>
+          <div class="finding-desc">Instead of only tracking completed purchases, also track when someone views a product, adds it to their cart, or starts checkout. This gives AI models far more data to learn from — often 10 to 20 times more.</div>
+        </div>
+      </div>
+
+      <div class="finding-row">
+        <div class="finding-dot" style="background:var(--blue);"></div>
+        <div class="finding-text">
+          <div class="finding-title">Encourage users to log in or register</div>
+          <div class="finding-desc">When users are logged in, we can recognise them reliably. Even a simple "Save your cart" or newsletter sign-up prompt can significantly improve our ability to personalise their experience.</div>
+        </div>
+      </div>
+
+      <div class="finding-row" style="border-bottom:none; padding-bottom:0;">
+        <div class="finding-dot" style="background:var(--blue);"></div>
+        <div class="finding-text">
+          <div class="finding-title">Re-run this audit in 4–6 weeks</div>
+          <div class="finding-desc">Once these changes are live, run the audit again. Based on our estimates, your score should improve to 70%+ — enough to unlock the use cases below.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Detailed breakdown (collapsible) -->
+    <details style="margin-bottom:24px;">
+      <summary style="font-size:14px;font-weight:600;color:var(--text-2);cursor:pointer;padding:4px 0;user-select:none;">
+        📊 See detailed scores breakdown
+      </summary>
+      <table class="results-table" style="margin-top:14px;">
+        <thead>
+          <tr>
+            <th>Area Checked</th>
+            <th>What we found</th>
+            <th>Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="fade-item">
+            <td>🪪 Identity</td>
+            <td>Only 4.7% of users are identifiable</td>
+            <td class="score-bad">0</td>
+          </tr>
+          <tr class="fade-item">
+            <td>💡 Conversions</td>
+            <td>Very few conversions recorded (0.69%)</td>
+            <td class="score-bad">0</td>
+          </tr>
+          <tr class="fade-item">
+            <td>📅 History</td>
+            <td>Limited historical data available</td>
+            <td class="score-warn">3.3</td>
+          </tr>
+          <tr class="fade-item">
+            <td>📡 Recency</td>
+            <td>Strong, fresh data in the last 30 days</td>
+            <td class="score-good">25</td>
+          </tr>
+          <tr class="fade-item">
+            <td>🔬 Tracking</td>
+            <td>Event tracking looks stable</td>
+            <td class="score-good">20</td>
+          </tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="divider"></div>
+
+    <!-- USE CASES SECTION -->
+    <div class="uc-section">
+      <div class="uc-section-title">🚀 Recommended Use Cases for Your Business</div>
+      <div class="uc-section-sub">Based on your selected goals, here are plug-and-play tools you can run once your data is ready. Click any to learn more.</div>
+
+      <!-- Ecommerce group -->
+      <div class="uc-group" id="uc-ecommerce">
+        <div class="uc-group-label">🛒 Online Store (E-commerce)</div>
+
+        <button class="uc-card" onclick="showRedirect('Product &amp; Page Engagement Analyzer')">
+          <div class="uc-card-icon">📊</div>
+          <div class="uc-card-body">
+            <div class="uc-card-goal">Grow My Revenue</div>
+            <div class="uc-card-name">Product &amp; Page Engagement Analyzer</div>
+            <div class="uc-card-benefit">See which products and pages users spend the most time on before buying.</div>
+          </div>
+          <div class="uc-card-arrow">›</div>
+        </button>
+
+        <button class="uc-card" onclick="showRedirect('Cart &amp; Checkout Abandonment Tracker')">
+          <div class="uc-card-icon">🛒</div>
+          <div class="uc-card-body">
+            <div class="uc-card-goal">Reduce Drop-offs</div>
+            <div class="uc-card-name">Cart &amp; Checkout Abandonment Tracker</div>
+            <div class="uc-card-benefit">Find exactly where and for which products users leave without purchasing.</div>
+          </div>
+          <div class="uc-card-arrow">›</div>
+        </button>
+
+        <button class="uc-card" onclick="showRedirect('Campaign &amp; Traffic Abandonment Insights')">
+          <div class="uc-card-icon">📣</div>
+          <div class="uc-card-body">
+            <div class="uc-card-goal">Improve Marketing ROI</div>
+            <div class="uc-card-name">Campaign &amp; Traffic Abandonment Insights</div>
+            <div class="uc-card-benefit">Identify which traffic sources bring users who abandon vs. those who purchase.</div>
+          </div>
+          <div class="uc-card-arrow">›</div>
+        </button>
+
+        <button class="uc-card" onclick="showRedirect('Multi-Session Purchase Journey')">
+          <div class="uc-card-icon">🗺️</div>
+          <div class="uc-card-body">
+            <div class="uc-card-goal">Understand Buying Journey</div>
+            <div class="uc-card-name">Multi-Session Purchase Journey</div>
+            <div class="uc-card-benefit">See how many visits users take before finally purchasing.</div>
+          </div>
+          <div class="uc-card-arrow">›</div>
+        </button>
+
+        <button class="uc-card" onclick="showRedirect('Frequently Bought Together (Co-Purchase) Finder')">
+          <div class="uc-card-icon">🎁</div>
+          <div class="uc-card-body">
+            <div class="uc-card-goal">Increase Average Order Value</div>
+            <div class="uc-card-name">Frequently Bought Together Finder</div>
+            <div class="uc-card-benefit">Discover products that are often bought together to create bundles and offers.</div>
+          </div>
+          <div class="uc-card-arrow">›</div>
+        </button>
+      </div>
+
+      <!-- Lead Gen group -->
+      <div class="uc-group" id="uc-leadgen">
+        <div class="uc-group-label">📈 Service &amp; Lead Generation</div>
+
+        <button class="uc-card" onclick="showRedirect('Lead Journey Drop-off Analyzer')">
+          <div class="uc-card-icon">📋</div>
+          <div class="uc-card-body">
+            <div class="uc-card-goal">Increase Form Submissions</div>
+            <div class="uc-card-name">Lead Journey Drop-off Analyzer</div>
+            <div class="uc-card-benefit">Find where users leave before submitting the form.</div>
+          </div>
+          <div class="uc-card-arrow">›</div>
+        </button>
+
+        <button class="uc-card" onclick="showRedirect('Window Shopper vs Serious Visitor Segmentation')">
+          <div class="uc-card-icon">🎯</div>
+          <div class="uc-card-body">
+            <div class="uc-card-goal">Identify High-Intent Visitors</div>
+            <div class="uc-card-name">Window Shopper vs Serious Visitor Segmentation</div>
+            <div class="uc-card-benefit">Separate casual visitors from users likely to convert.</div>
+          </div>
+          <div class="uc-card-arrow">›</div>
+        </button>
+
+        <button class="uc-card" onclick="showRedirect('Source &amp; Device Lead Quality Insights')">
+          <div class="uc-card-icon">🔍</div>
+          <div class="uc-card-body">
+            <div class="uc-card-goal">Improve Lead Quality</div>
+            <div class="uc-card-name">Source &amp; Device Lead Quality Insights</div>
+            <div class="uc-card-benefit">See which channels and devices bring better quality leads.</div>
+          </div>
+          <div class="uc-card-arrow">›</div>
+        </button>
+
+        <button class="uc-card" onclick="showRedirect('User Path Before Conversion')">
+          <div class="uc-card-icon">🛤️</div>
+          <div class="uc-card-body">
+            <div class="uc-card-goal">Understand Path to Conversion</div>
+            <div class="uc-card-name">User Path Before Conversion</div>
+            <div class="uc-card-benefit">See what users do and which pages they visit before submitting a form.</div>
+          </div>
+          <div class="uc-card-arrow">›</div>
+        </button>
+
+        <button class="uc-card" onclick="showRedirect('Campaign Performance by Demographics')">
+          <div class="uc-card-icon">👥</div>
+          <div class="uc-card-body">
+            <div class="uc-card-goal">Optimise Campaign Spend</div>
+            <div class="uc-card-name">Campaign Performance by Demographics</div>
+            <div class="uc-card-benefit">Identify which audience groups respond best to your campaigns.</div>
+          </div>
+          <div class="uc-card-arrow">›</div>
+        </button>
+      </div>
+
+      <!-- Publisher group -->
+      <div class="uc-group" id="uc-publisher">
+        <div class="uc-group-label">📱 Content &amp; Subscription</div>
+
+        <button class="uc-card" onclick="showRedirect('Content &amp; Screen Engagement Analyzer')">
+          <div class="uc-card-icon">📺</div>
+          <div class="uc-card-body">
+            <div class="uc-card-goal">Increase User Engagement</div>
+            <div class="uc-card-name">Content &amp; Screen Engagement Analyzer</div>
+            <div class="uc-card-benefit">See which pages/screens users spend the most time on.</div>
+          </div>
+          <div class="uc-card-arrow">›</div>
+        </button>
+
+        <button class="uc-card" onclick="showRedirect('New vs Returning User Behavior')">
+          <div class="uc-card-icon">🔄</div>
+          <div class="uc-card-body">
+            <div class="uc-card-goal">Improve User Retention</div>
+            <div class="uc-card-name">New vs Returning User Behavior</div>
+            <div class="uc-card-benefit">Understand how loyal users behave differently from new users.</div>
+          </div>
+          <div class="uc-card-arrow">›</div>
+        </button>
+
+        <button class="uc-card" onclick="showRedirect('Session Behavior &amp; Navigation Flow')">
+          <div class="uc-card-icon">🧭</div>
+          <div class="uc-card-body">
+            <div class="uc-card-goal">Understand User Navigation</div>
+            <div class="uc-card-name">Session Behavior &amp; Navigation Flow</div>
+            <div class="uc-card-benefit">Learn how users move across your content.</div>
+          </div>
+          <div class="uc-card-arrow">›</div>
+        </button>
+
+        <button class="uc-card" onclick="showRedirect('Inactive User Identification')">
+          <div class="uc-card-icon">💤</div>
+          <div class="uc-card-body">
+            <div class="uc-card-goal">Grow Active User Base</div>
+            <div class="uc-card-name">Inactive User Identification</div>
+            <div class="uc-card-benefit">Spot users who haven't returned and may need re-engagement.</div>
+          </div>
+          <div class="uc-card-arrow">›</div>
+        </button>
+
+        <button class="uc-card" onclick="showRedirect('Cross-Device User Behavior Tracker')">
+          <div class="uc-card-icon">💻</div>
+          <div class="uc-card-body">
+            <div class="uc-card-goal">Optimise Cross-Device Experience</div>
+            <div class="uc-card-name">Cross-Device User Behavior Tracker</div>
+            <div class="uc-card-benefit">Understand how users switch devices while consuming content.</div>
+          </div>
+          <div class="uc-card-arrow">›</div>
+        </button>
+      </div>
+    </div>
+
+    <button class="btn" onclick="location.reload()">↺ Run Another Audit</button>
+
+  </div>
+</div>
+
+</div><!-- /wrapper -->
+
+<!-- REDIRECT TOAST -->
+<div class="toast-overlay" id="toast" onclick="closeToast(event)">
+  <div class="toast-box">
+    <div class="toast-icon">🔗</div>
+    <h3>Opening in ActivateIQ</h3>
+    <p>You're about to run:</p>
+    <div class="toast-tool">⚡ <span id="toast-uc-name">Use Case</span></div>
+    <p>This will redirect you to <strong>ActivateIQ</strong> where you can run this use case directly against your connected dataset.</p>
+    <br>
+    <button class="toast-close" onclick="closeToast()">Got it, close</button>
+  </div>
+</div>
+
+<script>
+/* ── STEP CONFIG ── */
+const STEPS = [
+  { label: 'Sign In' },
+  { label: 'Goals' },
+  { label: 'Connect' },
+  { label: 'Running' },
+  { label: 'Results' },
+];
+
+function buildStepbar(containerId, currentScreen) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = '';
+
+  STEPS.forEach((s, i) => {
+    const idx = i + 1;
+
+    const item = document.createElement('div');
+    item.className = 'step-item' + (idx === currentScreen ? ' active' : idx < currentScreen ? ' done' : '');
+
+    const dot = document.createElement('div');
+    dot.className = 'step-dot' + (idx < currentScreen ? ' done' : idx === currentScreen ? ' active' : '');
+    dot.innerHTML = idx < currentScreen ? '' : `<span>${idx}</span>`;
+
+    const label = document.createElement('div');
+    label.className = 'step-label';
+    label.textContent = s.label;
+
+    item.appendChild(dot);
+    item.appendChild(label);
+    el.appendChild(item);
+
+    if (i < STEPS.length - 1) {
+      const line = document.createElement('div');
+      line.className = 'step-line' + (idx < currentScreen ? ' done' : idx === currentScreen ? ' active' : '');
+      el.appendChild(line);
+    }
+  });
+}
+
+/* ── NAVIGATION ── */
+function go(from, to) {
+  document.getElementById('s' + from).classList.remove('active');
+  const next = document.getElementById('s' + to);
+  next.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (to >= 2) buildStepbar('steps' + to, to);
+}
+
+/* ── GOOGLE SIGN IN (simulated) ── */
+function googleSignIn() {
+  // In production this would trigger Google OAuth
+  go(1, 2);
+  buildStepbar('steps2', 2);
+}
+
+/* ── MULTI-SELECT GOALS ── */
+let selectedGoals = new Set();
+
+function toggleGoal(el) {
+  const type = el.dataset.type;
+  if (el.classList.contains('selected')) {
+    el.classList.remove('selected');
+    selectedGoals.delete(type);
+  } else {
+    el.classList.add('selected');
+    selectedGoals.add(type);
+  }
+  document.getElementById('b2').disabled = selectedGoals.size === 0;
+}
+
+/* ── CONNECT SCREEN ── */
+function chkReady() {
+  const p = document.getElementById('proj').value;
+  const d = document.getElementById('dset').value;
+  document.getElementById('b3').disabled = !(p && d);
+}
+
+/* ── AUDIT ── */
+function startAudit() {
+  go(3, 4);
+  buildStepbar('steps4', 4);
+  runAudit();
+}
+
+const PILLAR_LABELS = [
+  'Querying identity fields…',
+  'Counting conversion events…',
+  'Scanning date range…',
+  'Checking event freshness…',
+  'Validating schema…',
+];
+
+function runAudit() {
+  let step = 1;
+  const total = 5;
+
+  function tick() {
+    if (step > total) {
+      setTimeout(() => {
+        go(4, 5);
+        buildStepbar('steps5', 5);
+        animateRing();
+        applyGoalFilter();
+      }, 800);
+      return;
+    }
+
+    const pillar   = document.getElementById('p' + step);
+    const statusEl = document.getElementById('ps' + step);
+
+    pillar.classList.add('running');
+    statusEl.innerHTML = 'Running<span class="cursor">_</span>';
+
+    const pct = Math.round(((step - 1) / total) * 100);
+    document.getElementById('bar').style.width = pct + '%';
+    document.getElementById('prog-pct').textContent = pct + '%';
+    document.getElementById('prog-label').textContent = PILLAR_LABELS[step - 1];
+
+    setTimeout(() => {
+      pillar.classList.remove('running');
+      pillar.classList.add('complete');
+      statusEl.textContent = '✓ Done';
+
+      const newPct = Math.round((step / total) * 100);
+      document.getElementById('bar').style.width = newPct + '%';
+      document.getElementById('prog-pct').textContent = newPct + '%';
+
+      step++;
+      setTimeout(tick, 350);
+    }, 1000);
+  }
+
+  tick();
+}
+
+/* ── ANIMATE SCORE RING ── */
+function animateRing() {
+  const score = 48;
+  const r = 45;
+  const circumference = 2 * Math.PI * r; // ~282.7
+  const offset = circumference - (score / 100) * circumference;
+
+  setTimeout(() => {
+    const ring = document.getElementById('ring');
+    if (ring) {
+      ring.style.strokeDasharray = circumference;
+      ring.style.strokeDashoffset = offset;
+    }
+  }, 300);
+}
+
+/* ── FILTER USE CASES BY GOAL ── */
+function applyGoalFilter() {
+  const groups = {
+    ecommerce: document.getElementById('uc-ecommerce'),
+    leadgen:   document.getElementById('uc-leadgen'),
+    publisher: document.getElementById('uc-publisher'),
+  };
+
+  // If none selected (shouldn't happen) or all selected: show all
+  if (selectedGoals.size === 0 || selectedGoals.size === 3) {
+    Object.values(groups).forEach(g => { if (g) g.style.display = ''; });
+    return;
+  }
+
+  Object.entries(groups).forEach(([key, el]) => {
+    if (!el) return;
+    el.style.display = selectedGoals.has(key) ? '' : 'none';
+  });
+}
+
+/* ── REDIRECT TOAST ── */
+function showRedirect(useCaseName) {
+  document.getElementById('toast-uc-name').textContent = useCaseName;
+  document.getElementById('toast').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeToast(e) {
+  if (e && e.target !== document.getElementById('toast') && !e.target.classList.contains('toast-close')) return;
+  document.getElementById('toast').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+// ESC to close toast
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeToast({ target: document.getElementById('toast') });
+});
+
+/* ── INIT ── */
+document.addEventListener('DOMContentLoaded', () => {
+  chkReady();
+});
+</script>
+</body>
+</html>

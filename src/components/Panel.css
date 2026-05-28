@@ -1,0 +1,32 @@
+.panel {
+  width: 100%;
+  background: linear-gradient(180deg, #ffffff 0%, #fcfdff 100%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: clamp(24px, 4vw, 52px);
+  box-shadow: var(--shadow-md);
+  position: relative;
+  overflow: hidden;
+}
+
+.panel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  background: linear-gradient(90deg, var(--blue), var(--indigo), #74c0fc);
+}
+.panel::after {
+  content: "";
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  right: -140px;
+  bottom: -140px;
+  border-radius: 999px;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(92, 124, 250, 0.15), transparent 70%);
+}

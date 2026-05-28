@@ -1,0 +1,46 @@
+.finding-card {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  gap: 10px;
+  background: #fff;
+  transition: transform var(--t) var(--ease), box-shadow var(--t) var(--ease), border-color var(--t) var(--ease);
+}
+.finding-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+.dot.blue { background: var(--blue); }
+.dot.green { background: var(--green); }
+.dot.amber { background: var(--amber); }
+.dot.red { background: var(--red); }
+.finding-card small {
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--text-3);
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+.finding-card p {
+  margin-top: 4px;
+}
+.finding-card.severity-red {
+  border-color: #f3c7c7;
+  background: linear-gradient(180deg, #fff 0%, var(--red-pale) 100%);
+}
+.finding-card.severity-amber {
+  border-color: #f6ddb2;
+  background: linear-gradient(180deg, #fff 0%, var(--amber-pale) 100%);
+}
+.finding-card.severity-green {
+  border-color: #c5efcc;
+  background: linear-gradient(180deg, #fff 0%, var(--green-pale) 100%);
+}

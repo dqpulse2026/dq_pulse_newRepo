@@ -1,0 +1,29 @@
+.identity-card {
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, #fff 0%, #fcfdff 100%);
+  border-radius: 14px;
+  padding: 16px;
+  display: grid;
+  gap: 5px;
+  cursor: pointer;
+  text-align: left;
+  transition: all var(--t) var(--ease);
+}
+.identity-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: rgba(47, 158, 68, 0.08);
+}
+.identity-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--green-mid);
+  box-shadow: var(--shadow);
+}
+.identity-card.selected {
+  border-color: var(--green);
+  background: linear-gradient(180deg, var(--green-pale) 0%, #f5fff8 100%);
+  box-shadow: 0 0 0 1px rgba(47, 158, 68, 0.2), 0 10px 26px rgba(47, 158, 68, 0.12);
+}
