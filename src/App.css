@@ -156,6 +156,9 @@ p { color: var(--text-2); line-height: 1.65; }
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: sticky;
+  top: 12px;
+  z-index: 50;
 }
 .marketing-nav nav {
   display: flex;
@@ -693,6 +696,14 @@ p { color: var(--text-2); line-height: 1.65; }
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 16px;
+  position: sticky;
+  top: 12px;
+  z-index: 60;
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(232, 234, 242, 0.9);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
 }
 .workspace-brand p { font-size: 0.85rem; color: var(--text-3); }
 .workspace-nav nav {
@@ -725,6 +736,36 @@ p { color: var(--text-2); line-height: 1.65; }
   gap: 8px;
   align-items: center;
   flex-wrap: wrap;
+}
+
+/* ===== DQ LOGO ===== */
+.dq-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-1);
+  text-decoration: none;
+}
+.dq-logo svg {
+  display: block;
+}
+.dq-logo-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.05;
+}
+.dq-logo-name {
+  font-family: var(--font-head);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.dq-logo-pulse {
+  color: var(--blue);
+}
+.dq-logo-tagline {
+  font-size: 0.78rem;
+  color: var(--text-3);
+  margin-top: 3px;
 }
 .meta-pill {
   border: 1px solid var(--border-mid);
@@ -907,6 +948,9 @@ p { color: var(--text-2); line-height: 1.65; }
   gap: 10px;
   flex-wrap: wrap;
 }
+.results-inline-section {
+  margin-bottom: 14px;
+}
 .readiness-map {
   margin-top: 20px;
   border: 1px solid var(--border);
@@ -1039,8 +1083,54 @@ p { color: var(--text-2); line-height: 1.65; }
 }
 .action-plan-content p {
   margin: 0;
-  font-size: 0.95rem;
-  line-height: 1.55;
+  font-size: 1rem;
+  line-height: 1.65;
+}
+.action-plan-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.action-plan-head h4 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-family: var(--font-head);
+  letter-spacing: -0.01em;
+}
+.priority-pill {
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.priority-high {
+  background: var(--red-pale);
+  color: var(--red);
+  border: 1px solid var(--red-mid);
+}
+.priority-medium {
+  background: var(--amber-pale);
+  color: var(--amber);
+  border: 1px solid var(--amber-mid);
+}
+.priority-low {
+  background: var(--green-pale);
+  color: var(--green);
+  border: 1px solid var(--green-mid);
+}
+.action-impact {
+  margin-top: 8px !important;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  color: var(--text-1);
+}
+.action-impact strong {
+  font-weight: 700;
 }
 
 /* ===== SETTINGS ===== */

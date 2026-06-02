@@ -21,6 +21,16 @@ function RunningAuditPage() {
 
   return (
     <main className="workspace-page">
+      {/* Global step bar — Step 5 Running */}
+      <div className="wizard-topbar" style={{ position: 'relative', marginBottom: 20 }}>
+        <div className="wizard-topbar-inner">
+          <div className="wizard-topbar-meta">
+            <p className="eyebrow" style={{ marginBottom: 0 }}>Guided setup · Step 5 of 6</p>
+          </div>
+          <StepBar current={5} total={6} />
+        </div>
+      </div>
+
       <Panel className="running-panel">
         <p className="eyebrow">Audit in progress</p>
         <h1>Scanning your data quality pillars</h1>

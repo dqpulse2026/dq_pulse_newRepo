@@ -1,9 +1,13 @@
 import EmptyState from "../../components/EmptyState";
-import FindingCard from "../../components/FindingCard";
 import Panel from "../../components/Panel";
 import UseCaseCard from "../../components/UseCaseCard";
 import { useAudit } from "../../context/AuditContext";
 import { useCases } from "../../data/useCases";
+
+function PriorityPill({ priority }) {
+  const value = (priority || "medium").toLowerCase();
+  return <span className={`priority-pill priority-${value}`}>{`${value} priority`}</span>;
+}
 
 function RecommendationsPage() {
   const { recommendations, selectedGoals } = useAudit();
@@ -20,12 +24,19 @@ function RecommendationsPage() {
             <h3>Action plan</h3>
             <div className="action-plan-list">
               {recommendations.map((item, idx) => (
-                <div className="action-plan-item" key={item}>
+                <article className="action-plan-item" key={item.title || idx}>
                   <span className="action-plan-number">{idx + 1}</span>
                   <div className="action-plan-content">
-                    <p>{item}</p>
+                    <div className="action-plan-head">
+                      <h4>{item.title}</h4>
+                      <PriorityPill priority={item.priority} />
+                    </div>
+                    <p>{item.description}</p>
+                    <p className="action-impact">
+                      <strong>Expected impact:</strong> {item.impact}
+                    </p>
                   </div>
-                </div>
+                </article>
               ))}
             </div>
           </>
@@ -33,7 +44,8 @@ function RecommendationsPage() {
 
         {tools.length > 0 && (
           <>
-            <h3>Recommended tools</h3>
+            <h3>Recommended use cases</h3>
+            <p className="helper-copy">Based on your audit results, here are practical ideas your team can start using right away.</p>
             <div className="stack">{tools.map((item) => <UseCaseCard key={item.id} {...item} />)}</div>
           </>
         )}

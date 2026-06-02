@@ -8,9 +8,9 @@ import StepBar from "../../components/StepBar";
 import { useAudit } from "../../context/AuditContext";
 
 const STEP_LABELS = {
-  complete: ["Goals", "Audit type", "Identity", "Connect"],
-  ml:       ["Goals", "Audit type", "Connect"],
-  tracking: ["Goals", "Audit type", "Connect"],
+  complete: ["Sign In", "Business Type", "Audit Type", "Connect Data", "Running", "Results"],
+  ml:       ["Sign In", "Business Type", "Audit Type", "Connect Data", "Running", "Results"],
+  tracking: ["Sign In", "Business Type", "Audit Type", "Connect Data", "Running", "Results"],
 };
 
 const goals = [
@@ -38,12 +38,12 @@ function insightCopy(step, selectedGoals, selectedAudit) {
     return "Select at least one goal to tailor your findings and benchmark logic.";
   }
   if (step === 2) return "Audit mode controls the depth of analysis. Complete mode covers all pillars.";
-  if (step === 3 && selectedAudit === "complete") return "Identity signals influence attribution trust and confidence scoring.";
   return "We run read-only checks and generate an executive report with priority actions.";
 }
 
 export default function WizardPage() {
   const navigate = useNavigate();
+  // Wizard steps (local): 1 Goals, 2 Audit type, 3 Identity (Complete only), 4 Connect
   const [step, setStep] = useState(1);
   const {
     selectedGoals, toggleGoal,
@@ -53,7 +53,11 @@ export default function WizardPage() {
     runAudit, loading,
   } = useAudit();
 
-  const totalSteps = selectedAudit === "complete" ? 4 : 3;
+  /* The overall flow has 6 steps. The wizard handles steps 2–4 internally.
+     Step 1 (Sign In) is already complete. Steps 5–6 (Running, Results) are separate pages. */
+  const wizardSteps = selectedAudit === "complete" ? 4 : 3;
+  const totalSteps = 6;
+  const stepBarCurrent = step + 1; // offset: wizard step 1 = overall step 2
   const stepLabels = STEP_LABELS[selectedAudit] || STEP_LABELS.complete;
 
   const canMoveNext = useMemo(() => {
@@ -62,6 +66,8 @@ export default function WizardPage() {
     if (step === 3 && selectedAudit === "complete") return Boolean(userIdentity);
     return Boolean(project && dataset);
   }, [step, selectedGoals.size, selectedAudit, userIdentity, project, dataset]);
+
+  const isLastWizardStep = step === wizardSteps;
 
   const onRun = async () => {
     navigate("/app/running");
@@ -78,9 +84,9 @@ export default function WizardPage() {
       <div className="wizard-topbar">
         <div className="wizard-topbar-inner">
           <div className="wizard-topbar-meta">
-            <p className="eyebrow" style={{ marginBottom: 0 }}>Guided setup · Step {step} of {totalSteps}</p>
+            <p className="eyebrow" style={{ marginBottom: 0 }}>Guided setup · Step {stepBarCurrent} of {totalSteps}</p>
           </div>
-          <StepBar current={step} total={totalSteps} labels={stepLabels} />
+          <StepBar current={stepBarCurrent} total={totalSteps} labels={stepLabels} />
         </div>
       </div>
 
@@ -153,8 +159,8 @@ export default function WizardPage() {
             </>
           )}
 
-          {/* Last step — Connect */}
-          {step === totalSteps && (
+          {/* Last wizard step — Connect */}
+          {step === wizardSteps && (
             <>
               <h2>Connect your BigQuery source</h2>
               <p className="helper-copy">Read-only access only. No data is modified or written back to your project.</p>
@@ -184,7 +190,7 @@ export default function WizardPage() {
             <Button kind="ghost" disabled={step === 1} onClick={() => setStep((p) => Math.max(1, p - 1))}>
               Back
             </Button>
-            {step < totalSteps ? (
+            {!isLastWizardStep ? (
               <Button disabled={!canMoveNext} onClick={() => setStep((p) => p + 1)}>
                 Continue
               </Button>

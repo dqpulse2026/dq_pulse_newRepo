@@ -29,4 +29,10 @@
   border-radius: 999px;
   pointer-events: none;
   background: radial-gradient(circle, rgba(92, 124, 250, 0.15), transparent 70%);
+  z-index: 0;
+}
+
+.panel > * {
+  position: relative;
+  z-index: 1;
 }

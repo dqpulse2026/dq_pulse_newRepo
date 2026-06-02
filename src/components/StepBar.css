@@ -6,7 +6,7 @@
 }
 .stepbar-item {
   flex: 1;
-  min-width: 80px;
+  min-width: 60px;
   display: grid;
   justify-items: center;
   gap: 6px;

@@ -11,10 +11,18 @@
   transition: all 0.25s var(--spring);
   box-shadow: 0 2px 8px rgba(17, 24, 39, 0.04);
 }
+.audit-card div {
+  text-align: left;
+}
 .audit-card p {
   margin-top: 5px;
   color: var(--text-2);
   font-size: 0.9rem;
+  text-align: left;
+}
+.audit-card strong {
+  text-align: left;
+  display: block;
 }
 .audit-card:hover {
   transform: translateY(-3px);

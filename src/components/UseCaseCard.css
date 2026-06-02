@@ -26,4 +26,17 @@
 .usecase-card p {
   color: var(--text-2);
   margin-top: 4px;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+.usecase-card strong {
+  display: block;
+  font-size: 1.45rem;
+  line-height: 1.2;
+}
+.usecase-icon {
+  display: inline-block;
+  margin-right: 8px;
+  font-size: 1rem;
+  vertical-align: middle;
 }

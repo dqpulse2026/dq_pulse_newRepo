@@ -139,7 +139,7 @@ export default function LandingPage() {
           title="Media Spend Leak Detector"
           desc="Identify wasteful ad spend and optimize campaigns with automated tracking integrity checks."
           metrics={METRICS_MSLD}
-          cta="Start Audit"
+          cta="Start Monitoring"
           to="/auth"
         >
           <div className="lp-badge-row">

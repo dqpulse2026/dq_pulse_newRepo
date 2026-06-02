@@ -1,6 +1,6 @@
 import "./StepBar.css";
 
-const defaultLabels = ["Goals", "Audit type", "Identity", "Connect"];
+const defaultLabels = ["Sign In", "Business Type", "Audit Type", "Connect Data", "Running", "Results"];
 
 function StepBar({ current = 1, total = 4, labels = defaultLabels }) {
   const percent = Math.round(((current - 1) / (total - 1)) * 100);

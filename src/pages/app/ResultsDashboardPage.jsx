@@ -1,11 +1,13 @@
-import { Link } from "react-router-dom";
+import { useState, useMemo } from "react";
 import EmptyState from "../../components/EmptyState";
 import FindingCard from "../../components/FindingCard";
 import Panel from "../../components/Panel";
 import ScoreGauge from "../../components/ScoreGauge";
 import ScoreTable from "../../components/ScoreTable";
+import StepBar from "../../components/StepBar";
 import { useAudit } from "../../context/AuditContext";
 import { useAuditSummary } from "../../hooks/useAuditSummary";
+import { useCasesByAudit } from "../../data/useCases";
 
 function getReadinessLabel(score) {
   if (score >= 85) return { text: "Excellent", cls: "readiness-excellent" };
@@ -14,9 +16,29 @@ function getReadinessLabel(score) {
   return { text: "Critical", cls: "readiness-critical" };
 }
 
+const severityOrder = ["red", "amber", "blue", "green"];
+const severityLabels = { red: "Critical", amber: "Watch", blue: "Info", green: "Good" };
+const priorityStyles = { high: "priority-high", medium: "priority-medium", low: "priority-low" };
+const priorityLabels = { high: "High Priority", medium: "Medium Priority", low: "Low Priority" };
+
 function ResultsDashboardPage() {
-  const { scores, findings, recommendations } = useAudit();
+  const { scores, findings, recommendations, selectedAudit } = useAudit();
   const summary = useAuditSummary();
+  const [filter, setFilter] = useState("all");
+
+  const counts = useMemo(() => {
+    const map = { red: 0, amber: 0, blue: 0, green: 0 };
+    findings.forEach((f) => { if (map[f.severity] !== undefined) map[f.severity]++; });
+    return map;
+  }, [findings]);
+
+  const filtered = useMemo(() => {
+    if (filter === "all") return findings;
+    return findings.filter((f) => f.severity === filter);
+  }, [findings, filter]);
+
+  const useCases = useCasesByAudit[selectedAudit] || useCasesByAudit.complete;
+
   if (!scores) {
     return (
       <main className="workspace-page">
@@ -26,6 +48,17 @@ function ResultsDashboardPage() {
   }
   return (
     <main className="workspace-page">
+      {/* Global step bar — Step 6 Results */}
+      <div className="wizard-topbar" style={{ position: 'relative', marginBottom: 20 }}>
+        <div className="wizard-topbar-inner">
+          <div className="wizard-topbar-meta">
+            <p className="eyebrow" style={{ marginBottom: 0 }}>Guided setup · Step 6 of 6</p>
+          </div>
+          <StepBar current={6} total={6} />
+        </div>
+      </div>
+
+      {/* ===== HERO SCORE ===== */}
       <section className="results-hero">
         <Panel className="results-hero-panel">
           <section className="result-header">
@@ -54,6 +87,7 @@ function ResultsDashboardPage() {
         </Panel>
       </section>
 
+      {/* ===== FINDINGS + NEXT STEPS (quick view) ===== */}
       <section className="results-grid">
         <Panel className="results-column">
           <h3>🔍 What we found</h3>
@@ -61,12 +95,18 @@ function ResultsDashboardPage() {
         </Panel>
         <Panel className="results-column">
           <h3>🚀 What to do next</h3>
-          <div className="stack">{recommendations.map((item, idx) => <FindingCard key={item} severity="blue" text={`${idx + 1}. ${item}`} />)}</div>
+          <div className="stack">
+            {recommendations.map((item, idx) => {
+              const text = typeof item === "string" ? item : item.title;
+              return <FindingCard key={text} severity="blue" text={`${idx + 1}. ${text}`} />;
+            })}
+          </div>
         </Panel>
       </section>
 
-      <section className="results-grid">
-        <Panel className="results-column">
+      {/* ===== PILLAR SCORES (full width - no executive summary beside it) ===== */}
+      <section className="results-inline-section">
+        <Panel>
           <h3>📊 Detailed pillar scores</h3>
           <ScoreTable rows={scores.breakdown} />
           <div className="readiness-map">
@@ -86,20 +126,107 @@ function ResultsDashboardPage() {
             })}
           </div>
         </Panel>
-        <Panel className="results-column">
-          <h3>🧠 Executive summary</h3>
-          <div className="state-card">
-            <p>
-              Score {summary.score}. Your audit highlights {summary.findingsCount} key risks and {summary.actionsCount}{" "}
-              action items. This means your data setup is usable, but prioritizing these fixes will improve reporting trust and AI readiness.
-            </p>
-          </div>
-          <div className="result-actions">
-            <Link className="btn btn-primary" to="/app/findings">View all findings</Link>
-            <Link className="btn btn-ghost" to="/app/recommendations">View recommendations</Link>
-          </div>
+      </section>
+
+      {/* ===== INLINE FINDINGS SECTION ===== */}
+      <section className="results-inline-section">
+        <Panel>
+          <h2>Detailed findings</h2>
+          <p className="helper-copy">Plain-language issues detected during your scan.</p>
+
+          {findings.length > 0 && (
+            <div className="findings-summary-bar">
+              <button
+                className={`findings-filter-btn ${filter === "all" ? "active" : ""}`}
+                onClick={() => setFilter("all")}
+              >
+                All ({findings.length})
+              </button>
+              {severityOrder.map((sev) =>
+                counts[sev] > 0 ? (
+                  <button
+                    key={sev}
+                    className={`findings-filter-btn severity-filter-${sev} ${filter === sev ? "active" : ""}`}
+                    onClick={() => setFilter(sev)}
+                  >
+                    <span className={`dot-inline ${sev}`} aria-hidden="true" />
+                    {severityLabels[sev]} ({counts[sev]})
+                  </button>
+                ) : null
+              )}
+            </div>
+          )}
+
+          {!findings.length ? <EmptyState subtitle="No findings available yet. Run an audit first." /> : null}
+          <div className="stack">{filtered.map((item) => <FindingCard key={item.text} {...item} />)}</div>
         </Panel>
       </section>
+
+      {/* ===== INLINE RECOMMENDATIONS / ACTION PLAN ===== */}
+      <section className="results-inline-section">
+        <Panel>
+          <h2>Recommendations</h2>
+          <p className="helper-copy">Actions prioritized for business impact and effort.</p>
+          {!recommendations.length ? <EmptyState subtitle="Run an audit to generate recommendations." /> : null}
+
+          {recommendations.length > 0 && (
+            <>
+              <h3>Action plan</h3>
+              <div className="action-plan-list">
+                {recommendations.map((item, idx) => {
+                  /* Support both old string format and new detailed object format */
+                  const isDetailed = typeof item === "object" && item.title;
+                  return (
+                    <div className={`action-plan-item ${isDetailed ? 'action-plan-detailed' : ''}`} key={isDetailed ? item.title : item}>
+                      <span className="action-plan-number">{idx + 1}</span>
+                      <div className="action-plan-content">
+                        {isDetailed ? (
+                          <>
+                            <div className="action-plan-header">
+                              <strong className="action-plan-title">{item.title}</strong>
+                                <span className={`action-priority-badge ${priorityStyles [item.priority] || ''}`}>
+                                {priorityLabels[item.priority] || item.priority}
+                                </span>
+                            </div>
+                            <p className="action-plan-desc">{item.description}</p>
+                            <div className="action-plan-impact">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                              <span><strong>Expected impact:</strong> {item.impact}</span>
+                            </div>
+                          </>
+                        ) : (
+                          <p>{item}</p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </Panel>
+      </section>
+
+      {/* ===== RECOMMENDED USE CASES ===== */}
+      {useCases.length > 0 && (
+        <section className="results-inline-section">
+          <Panel>
+            <h2>Recommended use cases</h2>
+            <p className="helper-copy">Based on your audit results, here are high-value use cases you can now pursue.</p>
+            <div className="usecase-grid">
+              {useCases.map((item) => (
+                <div className="usecase-card-v2" key={item.id}>
+                  <span className="usecase-icon" aria-hidden="true">{item.icon}</span>
+                  <div>
+                    <strong>{item.title}</strong>
+                    <p>{item.blurb}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Panel>
+        </section>
+      )}
     </main>
   );
 }
